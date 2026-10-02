@@ -30,6 +30,7 @@ const applicationTables = [
 	"inbox_message",
 	"inbox_thread",
 	"job_queue",
+	"mcp_token",
 	"permission",
 	"role",
 	"role_permission",
@@ -83,6 +84,9 @@ if (organizationFoundationMigrationIndex === -1) {
 const applicationTableMigrationIndexes: Partial<
 	Record<ApplicationTable, number>
 > = {
+	mcp_token: migrationJournal.entries.findIndex(
+		({ tag }) => tag === "0006_mcp_tokens",
+	),
 	device_access_grant: tenantSharingMigrationIndex,
 	flow_access_grant: tenantSharingMigrationIndex,
 	flow_trigger_secret: tenantSharingMigrationIndex,

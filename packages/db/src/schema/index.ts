@@ -5,6 +5,7 @@ export * from "./contact";
 export * from "./device";
 export * from "./inbox";
 export * from "./job";
+export * from "./mcp";
 export * from "./rbac";
 export * from "./settings";
 export * from "./sync";

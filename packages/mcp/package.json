@@ -14,6 +14,7 @@
 		"@whatsapp-flow/api": "workspace:*",
 		"@whatsapp-flow/db": "workspace:*",
 		"@whatsapp-flow/env": "workspace:*",
-		"zod": "catalog:"
+		"zod": "catalog:",
+		"drizzle-orm": "^0.45.1"
 	}
 }

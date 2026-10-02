@@ -188,3 +188,38 @@ tradução. MCP exige configuração de `MCP_ENABLED` e `MCP_TOKEN` na API;
 esta integração não cria credenciais nem ativa o endpoint em produção.
 Os itens de concorrência/idempotência do provisionamento listados acima
 continuam como revisão pendente.
+
+## Painel de conexão MCP — 2026-10-02
+
+Nova opção **MCP** no menu lateral, em
+`/dashboard/<organizationSlug>/mcp`, com URL do endpoint, geração/cópia,
+exibição temporária, renovação e revogação do token da própria conta.
+A tela está traduzida para português, inglês e espanhol.
+
+O token completo só é devolvido ao ser gerado e permanece no estado local da
+tela. O banco armazena um hash SHA-256 e um prefixo. Consultar a conexão não
+retorna o segredo. Rotacionar invalida o hash anterior; revogar preserva uma
+marca que também bloqueia credenciais antigas da variável MCP_TOKEN para
+esse usuário. Contas suspensas não autenticam e não emitem credenciais.
+As ferramentas continuam respeitando as permissões por organização.
+
+A nova migration **0006_mcp_tokens** cria `mcp_token` sem alterar dados nas
+tabelas existentes. O verificador de migrations reconhece corretamente os
+bancos que ainda estão nas seis migrations anteriores.
+
+Antes de publicar esta versão:
+
+1. Aplicar as migrations com `bun run db:migrate` no ambiente da API.
+2. Manter `MCP_ENABLED=true` na API para aceitar conexões.
+3. Publicar Web/API da main e abrir a opção MCP para gerar o token.
+
+Não é necessário configurar MCP_TOKEN para os tokens gerados na interface.
+A variável continua suportada para compatibilidade de contas sem token
+emitido/revogado no banco.
+
+Validação: check:ci (tipos, Biome e builds) passou; 216 testes passaram com
+`bun test --isolate`, incluindo emissão, rotação, revogação, bloqueio sem
+login/conta suspensa e o reconhecimento da nova migration. A migration não
+foi executada contra o banco de produção nesta etapa; os testes do ciclo de
+token usam um banco simulado. Deploy e teste de navegação em produção seguem
+pendentes.
