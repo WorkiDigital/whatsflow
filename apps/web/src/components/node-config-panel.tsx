@@ -63,6 +63,7 @@ import type {
 	WebhookAuthConfig,
 	WebhookHeader,
 } from "./flow-nodes";
+import { InteractiveDeliverySettings } from "./interactive-delivery-settings";
 import { MediaUpload } from "./media-upload";
 
 interface NodeConfigPanelProps {
@@ -1123,7 +1124,7 @@ function InteractiveButtonsConfig({
 }) {
 	const addButton = () => {
 		const buttons = [...(data.buttons ?? [])];
-		buttons.push({ id: `btn_${Date.now()}`, text: "" });
+		buttons.push({ id: `btn_${globalThis.crypto.randomUUID()}`, text: "" });
 		onUpdate({ buttons } as Partial<FlowNodeData>);
 	};
 	const removeButton = (idx: number) => {
@@ -1139,9 +1140,10 @@ function InteractiveButtonsConfig({
 
 	return (
 		<>
+			<InteractiveDeliverySettings data={data} onUpdate={onUpdate} />
 			<Field label="Message Body">
-				<Input
-					className="h-7 text-xs"
+				<Textarea
+					className="min-h-[64px] text-xs"
 					placeholder="Main message"
 					value={data.bodyText ?? ""}
 					onChange={(e) => onUpdate({ bodyText: e.target.value })}
@@ -1160,7 +1162,7 @@ function InteractiveButtonsConfig({
 					<span className="text-[10px] text-muted-foreground">
 						Buttons ({(data.buttons ?? []).length}/3)
 					</span>
-					{(data.buttons ?? []).length < 3 && (
+					{(data.buttons ?? []).length + (data.urlButtons ?? []).length < 3 && (
 						<Button
 							type="button"
 							variant="ghost"
@@ -1225,7 +1227,7 @@ function InteractiveListConfig({
 	const addRow = (si: number) => {
 		const sections = [...(data.sections ?? [])];
 		sections[si].rows.push({
-			id: `row_${Date.now()}`,
+			id: `row_${globalThis.crypto.randomUUID()}`,
 			title: "",
 			description: "",
 		});
@@ -1249,9 +1251,10 @@ function InteractiveListConfig({
 
 	return (
 		<>
+			<InteractiveDeliverySettings data={data} onUpdate={onUpdate} />
 			<Field label="Message Body">
-				<Input
-					className="h-7 text-xs"
+				<Textarea
+					className="min-h-[64px] text-xs"
 					placeholder="Main message"
 					value={data.bodyText ?? ""}
 					onChange={(e) => onUpdate({ bodyText: e.target.value })}
@@ -1355,7 +1358,7 @@ function InteractiveQuickReplyConfig({
 }) {
 	const addButton = () => {
 		const buttons = [...(data.buttons ?? [])];
-		buttons.push({ id: `btn_${Date.now()}`, text: "" });
+		buttons.push({ id: `btn_${globalThis.crypto.randomUUID()}`, text: "" });
 		onUpdate({ buttons } as Partial<FlowNodeData>);
 	};
 	const removeButton = (idx: number) => {
@@ -1371,9 +1374,10 @@ function InteractiveQuickReplyConfig({
 
 	return (
 		<>
+			<InteractiveDeliverySettings data={data} onUpdate={onUpdate} />
 			<Field label="Prompt Text">
-				<Input
-					className="h-7 text-xs"
+				<Textarea
+					className="min-h-[64px] text-xs"
 					placeholder="Choose an option..."
 					value={data.bodyText ?? ""}
 					onChange={(e) => onUpdate({ bodyText: e.target.value })}
@@ -1386,6 +1390,10 @@ function InteractiveQuickReplyConfig({
 						type="button"
 						variant="ghost"
 						size="icon-xs"
+						disabled={
+							data.deliveryMode === "native_experimental" &&
+							(data.buttons ?? []).length + (data.urlButtons ?? []).length >= 3
+						}
 						onClick={addButton}
 					>
 						<Plus className="size-3" />

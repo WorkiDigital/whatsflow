@@ -52,6 +52,15 @@ export async function sendDeviceMessage(
 	return {
 		provider: "baileys",
 		messageId: result?.key?.id ?? undefined,
+		...(message.type === "interactive"
+			? {
+					deliveryMode:
+						message.deliveryMode === "native_experimental"
+							? ("native_interactive" as const)
+							: ("text_fallback" as const),
+					messageKey: result?.key,
+				}
+			: {}),
 		...(message.type === "poll"
 			? {
 					deliveryMode: "native_poll" as const,

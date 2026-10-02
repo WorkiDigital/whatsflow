@@ -235,6 +235,54 @@ describe("poll message building", () => {
 });
 
 describe("interactive wait snapshots", () => {
+	test("restores native delivery and resumes by stable ID after a restart", () => {
+		const context = buildInteractiveWaitContext(
+			{
+				id: "native",
+				type: "send-button",
+				data: {
+					buttons: [{ id: "info", text: "Saber mais" }],
+					urlButtons: [{ text: "Abrir", url: "https://example.com" }],
+				},
+			},
+			new Map([
+				[
+					"native",
+					[
+						{
+							id: "edge",
+							source: "native",
+							target: "next",
+							sourceHandle: "option:info",
+						},
+					],
+				],
+			]),
+			{ provider: "baileys", deliveryMode: "native_interactive" },
+		);
+		const restored = parseInteractiveWaitContext(
+			JSON.parse(JSON.stringify(context)),
+		);
+		expect(restored?.deliveryMode).toBe("native_interactive");
+		expect(restored?.options).toHaveLength(1);
+		if (!restored) throw new Error("Expected native snapshot");
+		expect(
+			resolveInteractiveWaitReply(restored, "Wrong label", {
+				kind: "interactive",
+				selectedId: "info",
+			})?.nextNodeIds,
+		).toEqual(["next"]);
+		expect(
+			resolveInteractiveWaitReply(restored, "Saber mais", {
+				kind: "interactive",
+				selectedId: "unknown",
+				selectedText: "Saber mais",
+			}),
+		).toBeNull();
+		expect(
+			parseInteractiveWaitContext({ ...context, kind: "poll" }),
+		).toBeNull();
+	});
 	const node = {
 		id: "buttons",
 		type: "send-button",

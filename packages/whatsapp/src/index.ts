@@ -11,6 +11,8 @@ export {
 	phoneNumberFromJid,
 	toPhoneJid,
 } from "./identity";
+export type { InteractiveMessage } from "./interactive-message";
+export { validateNativeInteractiveMessage } from "./interactive-message";
 export type { IncomingMessage } from "./message-handler";
 export { matchesKeywordTrigger } from "./message-handler";
 export type { OutgoingMessage } from "./message-sender";

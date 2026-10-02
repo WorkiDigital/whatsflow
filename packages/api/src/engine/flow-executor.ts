@@ -33,6 +33,7 @@ import {
 	getFlowNodeSecret,
 	WEBHOOK_AUTH_SECRET_KEY,
 } from "./flow-node-secrets";
+import { buildInteractiveMessage } from "./interactive-message-builder";
 import { enqueueJob } from "./job-queue";
 import {
 	delayFlowContinuationJobIdempotencyKey,
@@ -64,7 +65,7 @@ type InteractiveOption = {
 export type WaitContextV1 = {
 	version: 1;
 	kind: "interactive" | "poll";
-	deliveryMode: "text_fallback" | "native_poll";
+	deliveryMode: "text_fallback" | "native_poll" | "native_interactive";
 	provider?: SendResult["provider"];
 	/** Complete creation key required to bind native Baileys poll updates. */
 	pollMessageKey?: import("baileys").WAMessageKey;
@@ -270,7 +271,9 @@ export function buildInteractiveWaitContext(
 		deliveryMode:
 			poll && result?.deliveryMode === "native_poll"
 				? "native_poll"
-				: "text_fallback",
+				: !poll && result?.deliveryMode === "native_interactive"
+					? "native_interactive"
+					: "text_fallback",
 		...(provider ? { provider } : {}),
 		...(poll && result?.messageKey
 			? { pollMessageKey: result.messageKey }
@@ -291,7 +294,8 @@ export function parseInteractiveWaitContext(
 		context.version !== 1 ||
 		(context.kind !== "interactive" && context.kind !== "poll") ||
 		(context.deliveryMode !== "text_fallback" &&
-			context.deliveryMode !== "native_poll") ||
+			context.deliveryMode !== "native_poll" &&
+			context.deliveryMode !== "native_interactive") ||
 		!Array.isArray(context.options)
 	) {
 		return null;
@@ -336,7 +340,8 @@ export function parseInteractiveWaitContext(
 	const kind = context.kind;
 	const deliveryMode = context.deliveryMode;
 	const pollMessageKey = context.pollMessageKey;
-	if (kind === "interactive" && deliveryMode !== "text_fallback") return null;
+	if (kind === "interactive" && deliveryMode === "native_poll") return null;
+	if (kind === "poll" && deliveryMode === "native_interactive") return null;
 	if (
 		kind === "poll" &&
 		deliveryMode === "native_poll" &&
@@ -369,6 +374,8 @@ export function resolveInteractiveWaitReply(
 			(option) => option.id === reply.selectedId,
 		);
 		if (selected) return selected;
+		// A native ID is authoritative; never route an unknown ID using its label.
+		if (context.deliveryMode === "native_interactive") return null;
 	}
 	if (reply?.selectedText) {
 		const selected = context.options.find(
@@ -657,96 +664,31 @@ async function executeNode(node: FlowNode, ctx: ExecutionContext) {
 				});
 				return true;
 			}
-			case "send-button": {
-				const bodyText = resolveTemplate(String(data.bodyText ?? ""), ctx);
-				const buttons = (data.buttons as { text: string }[] | undefined) ?? [];
-				const footer = data.footerText
-					? resolveTemplate(String(data.footerText), ctx)
-					: undefined;
-				const sendResult = await sendDeviceMessage(ctx.deviceId, jid, {
-					type: "text",
-					text: [
-						bodyText,
-						...buttons.map((button, index) => `${index + 1}. ${button.text}`),
-						footer,
-					]
-						.filter(Boolean)
-						.join("\n"),
-				});
-				await recordOutboundMessage(
-					ctx,
-					"text",
-					bodyText,
-					undefined,
-					sendResult,
-				);
-				ctx.interactiveSendResult = sendResult;
-				ctx.nodeResults.push({ nodeId: node.id, status: "success" });
-				return true;
-			}
-			case "send-list": {
-				const bodyText = resolveTemplate(String(data.bodyText ?? ""), ctx);
-				const footer = data.footerText
-					? resolveTemplate(String(data.footerText), ctx)
-					: undefined;
-				const sections =
-					(data.sections as
-						| {
-								title: string;
-								rows: { id: string; title: string; description?: string }[];
-						  }[]
-						| undefined) ?? [];
-				const lines: string[] = [bodyText];
-				let optionIndex = 1;
-				for (const section of sections) {
-					if (section.title) lines.push(`\n*${section.title}*`);
-					for (const row of section.rows) {
-						lines.push(
-							row.description
-								? `${optionIndex}. ${row.title} — ${row.description}`
-								: `${optionIndex}. ${row.title}`,
-						);
-						optionIndex++;
-					}
-				}
-				if (footer) lines.push(`\n_${footer}_`);
-				const sendResult = await sendDeviceMessage(ctx.deviceId, jid, {
-					type: "text",
-					text: lines.join("\n"),
-				});
-				await recordOutboundMessage(
-					ctx,
-					"text",
-					bodyText,
-					undefined,
-					sendResult,
-				);
-				ctx.interactiveSendResult = sendResult;
-				ctx.nodeResults.push({ nodeId: node.id, status: "success" });
-				return true;
-			}
+			case "send-button":
+			case "send-list":
 			case "send-quick-reply": {
-				const bodyText = resolveTemplate(String(data.bodyText ?? ""), ctx);
-				const buttons =
-					((node.type === "send-poll" ? data.options : data.buttons) as
-						| { id: string; text: string }[]
-						| undefined) ?? [];
-				const lines: string[] = [bodyText];
-				for (let i = 0; i < buttons.length; i++) {
-					lines.push(`${i + 1}. ${buttons[i]?.text ?? ""}`);
-				}
-				const sendResult = await sendDeviceMessage(ctx.deviceId, jid, {
-					type: "text",
-					text: lines.join("\n"),
-				});
+				const message = buildInteractiveMessage(node, (text) =>
+					resolveTemplate(text, ctx),
+				);
+				const sendResult = await sendDeviceMessage(ctx.deviceId, jid, message);
 				await recordOutboundMessage(
 					ctx,
 					"text",
-					bodyText,
+					message.body,
 					undefined,
 					sendResult,
 				);
 				ctx.interactiveSendResult = sendResult;
+				// Snapshot the resolved labels so typed replies match what was actually sent.
+				ctx.interactiveOptions = getInteractiveOptions({
+					...node,
+					data: {
+						...data,
+						...(message.kind === "list"
+							? { sections: message.sections }
+							: { buttons: message.buttons }),
+					},
+				});
 				ctx.nodeResults.push({ nodeId: node.id, status: "success" });
 				return true;
 			}
@@ -1890,7 +1832,7 @@ async function createWaitingSession(
 				node,
 				adjacency,
 				ctx.interactiveSendResult,
-				node.type === "send-poll" ? ctx.interactiveOptions : undefined,
+				ctx.interactiveOptions,
 			)
 		: null;
 	const waitingProviderMessageId = ctx.interactiveSendResult?.messageId ?? null;

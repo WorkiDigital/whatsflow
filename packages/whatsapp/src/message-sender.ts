@@ -1,4 +1,9 @@
 import type { WAMessageKey, WASocket } from "baileys";
+import {
+	type InteractiveMessage,
+	interactiveFallbackText,
+	sendNativeInteractiveMessage,
+} from "./interactive-message";
 
 export type TemplateHeaderParameter =
 	| { type: "text"; text: string }
@@ -6,6 +11,7 @@ export type TemplateHeaderParameter =
 	| { type: "document"; url: string; fileName?: string };
 
 export type OutgoingMessage =
+	| InteractiveMessage
 	| { type: "text"; text: string }
 	| { type: "image"; url: string; caption?: string }
 	| { type: "video"; url: string; caption?: string }
@@ -45,6 +51,10 @@ export async function sendWhatsAppMessage(
 	message: OutgoingMessage,
 ) {
 	switch (message.type) {
+		case "interactive":
+			return message.deliveryMode === "native_experimental"
+				? sendNativeInteractiveMessage(socket, jid, message)
+				: socket.sendMessage(jid, { text: interactiveFallbackText(message) });
 		case "text":
 			return socket.sendMessage(jid, { text: message.text });
 		case "image":

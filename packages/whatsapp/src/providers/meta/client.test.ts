@@ -67,6 +67,49 @@ function streamResponse(chunks: Uint8Array[]) {
 }
 
 describe("Meta Graph client", () => {
+	test("rejects experimental Baileys interactive mode without making a request", async () => {
+		const fetchMock = mock(async () => new Response());
+		globalThis.fetch = fetchMock as never;
+		await expect(
+			sendMetaMessage({
+				credentials,
+				to: "15551234567",
+				message: {
+					type: "interactive",
+					kind: "buttons",
+					deliveryMode: "native_experimental",
+					body: "Hello",
+					buttons: [{ id: "a", text: "A" }],
+				},
+			}),
+		).rejects.toThrow("Baileys device");
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+	test("supports explicit numbered interactive text on Meta devices", async () => {
+		const fetchMock = mock(
+			async () => new Response(JSON.stringify({ messages: [{ id: "msg" }] })),
+		);
+		globalThis.fetch = fetchMock as never;
+		await sendMetaMessage({
+			credentials,
+			to: "15551234567",
+			message: {
+				type: "interactive",
+				kind: "buttons",
+				deliveryMode: "text_fallback",
+				body: "Hello",
+				buttons: [{ id: "a", text: "A" }],
+				urlButtons: [{ text: "Open", url: "https://example.com" }],
+			},
+		});
+		const [, request] = fetchMock.mock.calls[0] as unknown as [
+			unknown,
+			RequestInit,
+		];
+		expect(JSON.parse(String(request.body)).text.body).toBe(
+			"Hello\n1. A\nOpen: https://example.com",
+		);
+	});
 	test("does not retry non-retryable Graph errors", async () => {
 		const fetchMock = mock(async () => graphErrorResponse(400));
 		globalThis.fetch = fetchMock as never;

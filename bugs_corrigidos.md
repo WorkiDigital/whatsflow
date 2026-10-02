@@ -240,3 +240,15 @@ atributo lang, e remonta o provider usando a escolha salva. O teste falhou
 com o handler antigo e passou após a correção. Suíte: 217 testes passaram.
 Esta etapa modifica o código; a correção precisa do deploy da Web para
 chegar à instância publicada.
+# Mensagens interativas Baileys — 2026-10-02
+
+- Os nós de botões/lista/respostas rápidas antes enviavam apenas texto, apesar de
+  o recebimento reconhecer IDs de mensagens interativas.
+- Adicionado transporte protobuf experimental, opt-in por variável da API e por
+  nó, com modo texto preservado como padrão. Entrega real ainda requer teste.
+- Botões URL não entram nas saídas de resposta; IDs e rótulos resolvidos ficam no
+  snapshot da sessão. ID nativo desconhecido não é aceito por coincidência de texto.
+- Configuração e aviso no frontend em PT/EN/ES; detalhes em
+  [docs/BAILEYS_INTERACTIVE.md](docs/BAILEYS_INTERACTIVE.md).
+- `bun run test` agora inclui os testes do web e isola arquivos do pacote WhatsApp,
+  evitando que mocks de conexão de um arquivo contaminem os demais.
