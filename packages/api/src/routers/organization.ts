@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { user } from "@whatsapp-flow/db/schema/auth";
+import { seedOrganizationRbac } from "@whatsapp-flow/db/organization-rbac";
 import {
 	tenant,
 	tenantMember,
@@ -17,7 +18,6 @@ import {
 	protectedProcedure,
 	router,
 } from "../index";
-import { seedOrganizationRbac } from "../organization-rbac";
 
 const organizationInput = z.object({ tenantId: z.string().min(1) });
 const organizationSlugSchema = z

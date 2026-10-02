@@ -15,18 +15,23 @@ export const Route = createFileRoute("/dashboard/")({
 			await context.queryClient.ensureQueryData(
 				context.trpc.organization.listMine.queryOptions(),
 			)
-		).map((organization) => {
-			if (!organization.slug) {
-				throw new Error("Organization is missing a slug");
-			}
+		).map((organization) => ({
+			...organization,
+			// Workspaces provisioned before the slug fix can still be missing it.
+			// Keep them listed so the user is not locked out, but never try to
+			// build a dashboard URL out of a null slug.
+			slug: organization.slug ?? null,
+		}));
 
-			return { ...organization, slug: organization.slug };
-		});
+		const withSlug = organizations.filter(
+			(organization): organization is typeof organization & { slug: string } =>
+				organization.slug !== null,
+		);
 
-		if (organizations.length === 1) {
+		if (withSlug.length === 1 && organizations.length === 1) {
 			throw redirect({
 				to: "/dashboard/$organizationSlug",
-				params: { organizationSlug: organizations[0].slug },
+				params: { organizationSlug: withSlug[0].slug },
 			});
 		}
 
@@ -60,28 +65,43 @@ function OrganizationPickerPage() {
 						</div>
 					) : (
 						<div className="space-y-2">
-							{organizations.map((organization) => (
-								<Button
-									key={organization.id}
-									variant="outline"
-									className="h-auto w-full justify-start px-4 py-3 text-left"
-									render={
-										<Link
-											to="/dashboard/$organizationSlug"
-											params={{ organizationSlug: organization.slug }}
-										/>
-									}
-								>
-									<span className="flex min-w-0 flex-col gap-0.5">
-										<span className="truncate font-medium">
+							{organizations.map((organization) =>
+								organization.slug === null ? (
+									<div
+										key={organization.id}
+										className="rounded-lg border border-dashed p-4 text-left"
+									>
+										<span className="block truncate font-medium">
 											{organization.name}
 										</span>
-										<span className="truncate text-muted-foreground text-xs">
-											{organization.slug}
+										<span className="mt-1 block text-muted-foreground text-xs">
+											This workspace is missing its address and cannot be opened
+											yet. An administrator needs to finish setting it up.
 										</span>
-									</span>
-								</Button>
-							))}
+									</div>
+								) : (
+									<Button
+										key={organization.id}
+										variant="outline"
+										className="h-auto w-full justify-start px-4 py-3 text-left"
+										render={
+											<Link
+												to="/dashboard/$organizationSlug"
+												params={{ organizationSlug: organization.slug }}
+											/>
+										}
+									>
+										<span className="flex min-w-0 flex-col gap-0.5">
+											<span className="truncate font-medium">
+												{organization.name}
+											</span>
+											<span className="truncate text-muted-foreground text-xs">
+												{organization.slug}
+											</span>
+										</span>
+									</Button>
+								),
+							)}
 						</div>
 					)}
 				</CardContent>

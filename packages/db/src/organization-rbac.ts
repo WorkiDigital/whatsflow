@@ -1,4 +1,4 @@
-import type { createDb } from "@whatsapp-flow/db";
+import type { createDb } from "./index";
 import {
 	tenant,
 	tenantMember,
@@ -6,7 +6,7 @@ import {
 	tenantRole,
 	tenantRoleAssignment,
 	tenantRolePermission,
-} from "@whatsapp-flow/db/schema/tenant";
+} from "./schema/tenant";
 import { and, eq } from "drizzle-orm";
 
 export const organizationPermissions = [

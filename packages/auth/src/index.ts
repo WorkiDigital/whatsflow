@@ -1,13 +1,10 @@
 import { createHash } from "node:crypto";
 import { createDb } from "@whatsapp-flow/db";
+import { provisionWorkspace } from "@whatsapp-flow/db/provision-workspace";
 import * as schema from "@whatsapp-flow/db/schema/auth";
 import { userInvitation } from "@whatsapp-flow/db/schema/rbac";
 import { appSettings } from "@whatsapp-flow/db/schema/settings";
-import {
-	tenant,
-	tenantInvitation,
-	tenantMember,
-} from "@whatsapp-flow/db/schema/tenant";
+import { tenantInvitation } from "@whatsapp-flow/db/schema/tenant";
 import { env } from "@whatsapp-flow/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -28,24 +25,6 @@ function normalizeEmail(email: string) {
 
 function hashInviteToken(token: string) {
 	return createHash("sha256").update(token).digest("hex");
-}
-
-async function provisionPersonalTenant(
-	db: ReturnType<typeof createDb>,
-	user: { id: string; name: string },
-) {
-	await db
-		.insert(tenant)
-		.values({
-			id: user.id,
-			name: `${user.name}'s workspace`,
-			createdByUserId: user.id,
-		})
-		.onConflictDoNothing();
-	await db
-		.insert(tenantMember)
-		.values({ tenantId: user.id, userId: user.id, role: "owner" })
-		.onConflictDoNothing();
 }
 
 function signupDisabledError() {
@@ -192,7 +171,7 @@ export async function createAuth() {
 						throw signupDisabledError();
 					},
 					after: async (user) => {
-						await provisionPersonalTenant(createDb(), user);
+						await provisionWorkspace(createDb(), user);
 					},
 				},
 			},
