@@ -1,4 +1,5 @@
 import { env } from "@whatsapp-flow/env/server";
+import { interactiveFallbackText } from "../../interactive-message";
 import type { OutgoingMessage } from "../../message-sender";
 
 const GRAPH_BASE_URL = "https://graph.facebook.com";
@@ -492,6 +493,17 @@ function toMetaMessagePayload(to: string, message: OutgoingMessage) {
 	};
 
 	switch (message.type) {
+		case "interactive":
+			if (message.deliveryMode !== "text_fallback") {
+				throw new Error(
+					"Experimental native messages require a Baileys device. Use text mode for Meta Cloud API.",
+				);
+			}
+			return {
+				...base,
+				type: "text",
+				text: { body: interactiveFallbackText(message), preview_url: false },
+			};
 		case "text":
 			return {
 				...base,

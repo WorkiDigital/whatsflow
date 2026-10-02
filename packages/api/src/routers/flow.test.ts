@@ -72,6 +72,45 @@ const organizationMembership = {
 	},
 };
 
+test("validates native options on save and keeps URLs out of required branches", () => {
+	const node = {
+		id: "interactive",
+		type: "send-button",
+		data: {
+			deliveryMode: "native_experimental",
+			bodyText: "Olá",
+			buttons: [{ id: "info", text: "Saber mais" }],
+			urlButtons: [{ text: "Abrir", url: "https://example.com" }],
+		},
+	};
+	const edges = [
+		{
+			id: "e",
+			source: "interactive",
+			target: "end",
+			sourceHandle: "option:info",
+		},
+	];
+	expect(validateFlowGraphDiagnostics([node], edges)).toEqual([]);
+	expect(
+		validateFlowGraphDiagnostics(
+			[
+				{
+					...node,
+					data: {
+						...node.data,
+						buttons: [
+							{ id: "x", text: "A" },
+							{ id: "x", text: "B" },
+						],
+					},
+				},
+			],
+			edges,
+		).some((d) => d.issueCode === "interactive_invalid_configuration"),
+	).toBe(true);
+});
+
 type Selection = Record<string, unknown> | undefined;
 
 function createMockDb(selects: unknown[][]) {

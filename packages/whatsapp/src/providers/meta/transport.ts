@@ -203,7 +203,7 @@ export async function sendMetaDeviceMessage(
 	return {
 		provider: "meta_cloud" as const,
 		messageId: response.messages?.[0]?.id,
-		...(message.type === "poll"
+		...(message.type === "poll" || message.type === "interactive"
 			? { deliveryMode: "text_fallback" as const }
 			: {}),
 		raw: response,

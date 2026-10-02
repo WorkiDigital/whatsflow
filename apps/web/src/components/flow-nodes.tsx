@@ -100,6 +100,9 @@ export interface InteractiveNodeData {
 	label: string;
 	category: "interactive";
 	bodyText?: string;
+	deliveryMode?: "text_fallback" | "native_experimental";
+	headerImageUrl?: string;
+	urlButtons?: { text: string; url: string }[];
 	footerText?: string;
 	buttonText?: string;
 	buttons?: { id: string; text: string }[];
@@ -317,6 +320,12 @@ function BaseFlowNode({
 			</div>
 
 			<div className="flex min-h-9 flex-col gap-1.5 px-3 py-2.5">
+				{isInteractiveBranchNode(data) &&
+					data.deliveryMode === "native_experimental" && (
+						<span className="text-[10px] text-amber-600">
+							Baileys · experimental
+						</span>
+					)}
 				{children ?? (
 					<span className="text-[10px] text-muted-foreground">
 						Configure this step from the inspector.

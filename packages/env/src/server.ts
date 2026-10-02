@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const env = createEnv({
 	server: {
+		BAILEYS_NATIVE_INTERACTIVE: z.enum(["true", "false"]).default("false"),
 		DATABASE_URL: z.string().min(1),
 		AUTH_SECRET: z.string().min(32),
 		AUTH_URL: z.url(),

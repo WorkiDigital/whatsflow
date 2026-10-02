@@ -20,6 +20,7 @@ import {
 	upsertFlowNodeSecret,
 	WEBHOOK_AUTH_SECRET_KEY,
 } from "../engine/flow-node-secrets";
+import { buildInteractiveMessage } from "../engine/interactive-message-builder";
 import { organizationPermissionProcedure, router } from "../index";
 
 const jsonSchema = z.unknown();
@@ -768,6 +769,26 @@ export function validateFlowGraphDiagnostics(
 	const diagnostics: FlowGraphDiagnostic[] = [];
 	for (const node of nodes) {
 		if (!isInteractiveNode(node.type)) continue;
+		if (node.type !== "send-poll") {
+			try {
+				// Keep placeholders during static validation; resolved values are
+				// validated again immediately before transport.
+				buildInteractiveMessage(
+					{ type: node.type ?? "", data: node.data ?? {} },
+					(value) => value,
+					{ allowTemplates: true },
+				);
+			} catch (error) {
+				diagnostics.push({
+					issueCode: "interactive_invalid_configuration",
+					nodeId: node.id,
+					message:
+						error instanceof Error
+							? error.message
+							: "Invalid interactive configuration",
+				});
+			}
+		}
 		if (node.type === "send-poll") {
 			diagnostics.push(...validatePollConfiguration(node));
 		}
