@@ -23,6 +23,7 @@ import {
 	Mail,
 	Megaphone,
 	MessageSquare,
+	Plug,
 	Plus,
 	Settings,
 	ShieldCheck,
@@ -39,6 +40,12 @@ import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
 
 const navItems = [
+	{
+		to: "/dashboard/$organizationSlug/mcp",
+		labelKey: "MCP",
+		icon: Plug,
+		exact: false,
+	},
 	{
 		to: "/dashboard/$organizationSlug",
 		labelKey: "nav.overview",

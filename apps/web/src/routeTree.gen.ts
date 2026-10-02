@@ -20,6 +20,7 @@ import { Route as DashboardOrganizationSlugUsersRouteImport } from './routes/das
 import { Route as DashboardOrganizationSlugSettingsRouteImport } from './routes/dashboard.$organizationSlug.settings'
 import { Route as DashboardOrganizationSlugRolesRouteImport } from './routes/dashboard.$organizationSlug.roles'
 import { Route as DashboardOrganizationSlugNewslettersRouteImport } from './routes/dashboard.$organizationSlug.newsletters'
+import { Route as DashboardOrganizationSlugMcpRouteImport } from './routes/dashboard.$organizationSlug.mcp'
 import { Route as DashboardOrganizationSlugLogsRouteImport } from './routes/dashboard.$organizationSlug.logs'
 import { Route as DashboardOrganizationSlugInboxRouteImport } from './routes/dashboard.$organizationSlug.inbox'
 import { Route as DashboardOrganizationSlugGroupsRouteImport } from './routes/dashboard.$organizationSlug.groups'
@@ -95,6 +96,12 @@ const DashboardOrganizationSlugNewslettersRoute =
   DashboardOrganizationSlugNewslettersRouteImport.update({
     id: '/newsletters',
     path: '/newsletters',
+    getParentRoute: () => DashboardOrganizationSlugRoute,
+  } as any)
+const DashboardOrganizationSlugMcpRoute =
+  DashboardOrganizationSlugMcpRouteImport.update({
+    id: '/mcp',
+    path: '/mcp',
     getParentRoute: () => DashboardOrganizationSlugRoute,
   } as any)
 const DashboardOrganizationSlugLogsRoute =
@@ -196,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/$organizationSlug/groups': typeof DashboardOrganizationSlugGroupsRoute
   '/dashboard/$organizationSlug/inbox': typeof DashboardOrganizationSlugInboxRoute
   '/dashboard/$organizationSlug/logs': typeof DashboardOrganizationSlugLogsRoute
+  '/dashboard/$organizationSlug/mcp': typeof DashboardOrganizationSlugMcpRoute
   '/dashboard/$organizationSlug/newsletters': typeof DashboardOrganizationSlugNewslettersRoute
   '/dashboard/$organizationSlug/roles': typeof DashboardOrganizationSlugRolesRoute
   '/dashboard/$organizationSlug/settings': typeof DashboardOrganizationSlugSettingsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesByTo {
   '/dashboard/$organizationSlug/groups': typeof DashboardOrganizationSlugGroupsRoute
   '/dashboard/$organizationSlug/inbox': typeof DashboardOrganizationSlugInboxRoute
   '/dashboard/$organizationSlug/logs': typeof DashboardOrganizationSlugLogsRoute
+  '/dashboard/$organizationSlug/mcp': typeof DashboardOrganizationSlugMcpRoute
   '/dashboard/$organizationSlug/newsletters': typeof DashboardOrganizationSlugNewslettersRoute
   '/dashboard/$organizationSlug/roles': typeof DashboardOrganizationSlugRolesRoute
   '/dashboard/$organizationSlug/settings': typeof DashboardOrganizationSlugSettingsRoute
@@ -248,6 +257,7 @@ export interface FileRoutesById {
   '/dashboard/$organizationSlug/groups': typeof DashboardOrganizationSlugGroupsRoute
   '/dashboard/$organizationSlug/inbox': typeof DashboardOrganizationSlugInboxRoute
   '/dashboard/$organizationSlug/logs': typeof DashboardOrganizationSlugLogsRoute
+  '/dashboard/$organizationSlug/mcp': typeof DashboardOrganizationSlugMcpRoute
   '/dashboard/$organizationSlug/newsletters': typeof DashboardOrganizationSlugNewslettersRoute
   '/dashboard/$organizationSlug/roles': typeof DashboardOrganizationSlugRolesRoute
   '/dashboard/$organizationSlug/settings': typeof DashboardOrganizationSlugSettingsRoute
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/dashboard/$organizationSlug/groups'
     | '/dashboard/$organizationSlug/inbox'
     | '/dashboard/$organizationSlug/logs'
+    | '/dashboard/$organizationSlug/mcp'
     | '/dashboard/$organizationSlug/newsletters'
     | '/dashboard/$organizationSlug/roles'
     | '/dashboard/$organizationSlug/settings'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/dashboard/$organizationSlug/groups'
     | '/dashboard/$organizationSlug/inbox'
     | '/dashboard/$organizationSlug/logs'
+    | '/dashboard/$organizationSlug/mcp'
     | '/dashboard/$organizationSlug/newsletters'
     | '/dashboard/$organizationSlug/roles'
     | '/dashboard/$organizationSlug/settings'
@@ -328,6 +340,7 @@ export interface FileRouteTypes {
     | '/dashboard/$organizationSlug/groups'
     | '/dashboard/$organizationSlug/inbox'
     | '/dashboard/$organizationSlug/logs'
+    | '/dashboard/$organizationSlug/mcp'
     | '/dashboard/$organizationSlug/newsletters'
     | '/dashboard/$organizationSlug/roles'
     | '/dashboard/$organizationSlug/settings'
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       path: '/newsletters'
       fullPath: '/dashboard/$organizationSlug/newsletters'
       preLoaderRoute: typeof DashboardOrganizationSlugNewslettersRouteImport
+      parentRoute: typeof DashboardOrganizationSlugRoute
+    }
+    '/dashboard/$organizationSlug/mcp': {
+      id: '/dashboard/$organizationSlug/mcp'
+      path: '/mcp'
+      fullPath: '/dashboard/$organizationSlug/mcp'
+      preLoaderRoute: typeof DashboardOrganizationSlugMcpRouteImport
       parentRoute: typeof DashboardOrganizationSlugRoute
     }
     '/dashboard/$organizationSlug/logs': {
@@ -591,6 +611,7 @@ interface DashboardOrganizationSlugRouteChildren {
   DashboardOrganizationSlugGroupsRoute: typeof DashboardOrganizationSlugGroupsRoute
   DashboardOrganizationSlugInboxRoute: typeof DashboardOrganizationSlugInboxRoute
   DashboardOrganizationSlugLogsRoute: typeof DashboardOrganizationSlugLogsRoute
+  DashboardOrganizationSlugMcpRoute: typeof DashboardOrganizationSlugMcpRoute
   DashboardOrganizationSlugNewslettersRoute: typeof DashboardOrganizationSlugNewslettersRoute
   DashboardOrganizationSlugRolesRoute: typeof DashboardOrganizationSlugRolesRoute
   DashboardOrganizationSlugSettingsRoute: typeof DashboardOrganizationSlugSettingsRoute
@@ -613,6 +634,7 @@ const DashboardOrganizationSlugRouteChildren: DashboardOrganizationSlugRouteChil
     DashboardOrganizationSlugGroupsRoute: DashboardOrganizationSlugGroupsRoute,
     DashboardOrganizationSlugInboxRoute: DashboardOrganizationSlugInboxRoute,
     DashboardOrganizationSlugLogsRoute: DashboardOrganizationSlugLogsRoute,
+    DashboardOrganizationSlugMcpRoute: DashboardOrganizationSlugMcpRoute,
     DashboardOrganizationSlugNewslettersRoute:
       DashboardOrganizationSlugNewslettersRoute,
     DashboardOrganizationSlugRolesRoute: DashboardOrganizationSlugRolesRoute,

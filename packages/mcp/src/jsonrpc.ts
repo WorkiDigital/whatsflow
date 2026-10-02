@@ -1,5 +1,4 @@
-import { env } from "@whatsapp-flow/env/server";
-import { callMcpTool, listMcpTools, mcpConfigured, mcpEnabled } from "./index";
+import { callMcpTool, listMcpTools, mcpEnabled } from "./index";
 
 /**
  * JSON-RPC 2.0 transport for the MCP tools, shaped so an MCP client (Claude
@@ -50,14 +49,6 @@ export async function handleJsonRpc(
 		return errorResponse(id, -32000, "MCP server is disabled");
 	}
 
-	if (!mcpConfigured()) {
-		return errorResponse(
-			id,
-			-32000,
-			"MCP_TOKEN is not configured or is shorter than 32 characters",
-		);
-	}
-
 	switch (request.method) {
 		case "initialize":
 			return okResponse(id, {
@@ -105,8 +96,7 @@ export async function handleJsonRpc(
 export function mcpStatus() {
 	return {
 		enabled: mcpEnabled(),
-		configured: mcpConfigured(),
+		credentialStorage: "database",
 		toolCount: listMcpTools().length,
-		envVar: env.MCP_TOKEN ? "MCP_TOKEN (set)" : "MCP_TOKEN (missing)",
 	};
 }

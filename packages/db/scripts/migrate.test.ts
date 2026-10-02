@@ -12,6 +12,15 @@ const migrationEntries = [
 	{ createdAt: 300, hash: "third-hash" },
 ] as const;
 
+test("MCP credential storage is required only after its migration", () => {
+	expect(requiredApplicationTablesForAppliedMigrations(6)).not.toContain(
+		"mcp_token",
+	);
+	expect(requiredApplicationTablesForAppliedMigrations(7)).toContain(
+		"mcp_token",
+	);
+});
+
 describe("isKnownMigrationLedgerPrefix", () => {
 	test("accepts non-empty exact ordered prefixes from the checked-in journal", () => {
 		expect(

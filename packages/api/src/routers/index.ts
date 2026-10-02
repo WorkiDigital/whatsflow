@@ -8,6 +8,7 @@ import { flowLogRouter } from "./flow-log";
 import { flowSessionRouter } from "./flow-session";
 import { groupRouter } from "./group";
 import { inboxRouter } from "./inbox";
+import { mcpRouter } from "./mcp";
 import { mediaRouter } from "./media";
 import { organizationRouter } from "./organization";
 import { rbacRouter } from "./rbac";
@@ -17,6 +18,7 @@ import { userRouter } from "./user";
 import { webhookRouter } from "./webhook";
 
 export const appRouter = router({
+	mcp: mcpRouter,
 	audit: auditRouter,
 	healthCheck: publicProcedure.query(() => {
 		return "OK";
