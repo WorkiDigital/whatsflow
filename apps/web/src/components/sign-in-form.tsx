@@ -66,9 +66,7 @@ export default function SignInForm({
 				return;
 			}
 			toast.error(
-				error instanceof Error
-					? error.message
-					: t("auth.inviteError"),
+				error instanceof Error ? error.message : t("auth.inviteError"),
 			);
 		}
 	};
@@ -167,7 +165,7 @@ export default function SignInForm({
 							onClick={() => signInWithProvider(provider)}
 						>
 							{socialProviderPending === provider.providerId ? (
-								{t("auth.redirecting")}
+								t("auth.redirecting")
 							) : (
 								<>
 									<ProviderIcon iconUrl={provider.iconUrl} />

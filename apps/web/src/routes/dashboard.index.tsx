@@ -54,9 +54,7 @@ function OrganizationPickerPage() {
 						<Building2 className="size-5" />
 					</div>
 					<CardTitle>{t("organizations.title")}</CardTitle>
-					<CardDescription>
-						{t("organizations.description")}
-					</CardDescription>
+					<CardDescription>{t("organizations.description")}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					{organizations.length === 0 ? (

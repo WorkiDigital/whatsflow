@@ -74,7 +74,7 @@ function RouteComponent() {
 					<div className="grid max-w-md gap-2">
 						{steps.map(({ icon: Icon, labelKey }) => (
 							<div
-								key={label}
+								key={labelKey}
 								className="flex items-center gap-3 border bg-card/70 p-3"
 							>
 								<span className="flex size-8 items-center justify-center border bg-muted text-primary">

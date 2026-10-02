@@ -31,12 +31,6 @@ import {
 } from "@whatsapp-flow/api/engine/webhook-dispatcher";
 import { logger as apiLogger } from "@whatsapp-flow/api/observability/logger";
 import { renderMetrics } from "@whatsapp-flow/api/observability/metrics";
-import {
-	handleJsonRpc,
-	mcpConfigured,
-	mcpEnabled,
-} from "@whatsapp-flow/mcp/jsonrpc";
-import { resolveMcpCredential } from "@whatsapp-flow/mcp/credentials";
 import { seedRbac } from "@whatsapp-flow/api/rbac";
 import { appRouter } from "@whatsapp-flow/api/routers/index";
 import { auth } from "@whatsapp-flow/auth";
@@ -52,6 +46,9 @@ import {
 } from "@whatsapp-flow/db/schema/device";
 import { inboxMessage, inboxThread } from "@whatsapp-flow/db/schema/inbox";
 import { env } from "@whatsapp-flow/env/server";
+import { mcpConfigured, mcpEnabled } from "@whatsapp-flow/mcp";
+import { resolveMcpCredential } from "@whatsapp-flow/mcp/credentials";
+import { handleJsonRpc } from "@whatsapp-flow/mcp/jsonrpc";
 import {
 	isLocalStorageDriver,
 	LocalStorageDriver,

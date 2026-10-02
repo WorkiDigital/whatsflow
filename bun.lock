@@ -29,6 +29,7 @@
         "@whatsapp-flow/auth": "workspace:*",
         "@whatsapp-flow/db": "workspace:*",
         "@whatsapp-flow/env": "workspace:*",
+        "@whatsapp-flow/mcp": "workspace:*",
         "@whatsapp-flow/storage": "workspace:*",
         "@whatsapp-flow/whatsapp": "workspace:*",
         "better-auth": "catalog:",
@@ -155,6 +156,15 @@
         "@types/bun": "catalog:",
         "@whatsapp-flow/config": "workspace:*",
         "typescript": "catalog:",
+      },
+    },
+    "packages/mcp": {
+      "name": "@whatsapp-flow/mcp",
+      "dependencies": {
+        "@whatsapp-flow/api": "workspace:*",
+        "@whatsapp-flow/db": "workspace:*",
+        "@whatsapp-flow/env": "workspace:*",
+        "zod": "catalog:",
       },
     },
     "packages/storage": {
@@ -1072,6 +1082,8 @@
     "@whatsapp-flow/db": ["@whatsapp-flow/db@workspace:packages/db"],
 
     "@whatsapp-flow/env": ["@whatsapp-flow/env@workspace:packages/env"],
+
+    "@whatsapp-flow/mcp": ["@whatsapp-flow/mcp@workspace:packages/mcp"],
 
     "@whatsapp-flow/storage": ["@whatsapp-flow/storage@workspace:packages/storage"],
 

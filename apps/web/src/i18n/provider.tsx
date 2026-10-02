@@ -1,6 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useMemo,
+	useState,
+} from "react";
+import type { Locale } from "./dictionaries";
 import {
 	defaultLocale,
 	isLocale,
@@ -8,7 +14,6 @@ import {
 	resolveLocale,
 	translate,
 } from "./dictionaries";
-import type { Locale } from "./dictionaries";
 
 type I18nContextValue = {
 	locale: Locale;

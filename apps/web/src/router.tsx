@@ -9,8 +9,8 @@ import { env } from "@whatsapp-flow/env/web";
 import { toast } from "sonner";
 
 import Loader from "./components/loader";
-import { defaultLocale } from "./i18n/dictionaries";
 import type { Locale } from "./i18n/dictionaries";
+import { defaultLocale } from "./i18n/dictionaries";
 import { routeTree } from "./routeTree.gen";
 import { TRPCProvider } from "./utils/trpc";
 
@@ -98,6 +98,6 @@ export const getRouter = async () => {
 
 declare module "@tanstack/react-router" {
 	interface Register {
-		router: ReturnType<typeof getRouter>;
+		router: Awaited<ReturnType<typeof getRouter>>;
 	}
 }

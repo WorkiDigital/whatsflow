@@ -37,7 +37,10 @@ export function negotiateLocale(acceptLanguage: string | null | undefined) {
 			const [tag, ...params] = part.trim().split(";");
 			const qParam = params.find((param) => param.trim().startsWith("q="));
 			const quality = qParam ? Number.parseFloat(qParam.trim().slice(2)) : 1;
-			return { tag: tag.trim().toLowerCase(), quality: Number.isNaN(quality) ? 0 : quality };
+			return {
+				tag: tag.trim().toLowerCase(),
+				quality: Number.isNaN(quality) ? 0 : quality,
+			};
 		})
 		.filter((entry) => entry.tag.length > 0)
 		.sort((a, b) => b.quality - a.quality);
@@ -83,7 +86,8 @@ const dictionaries: Record<Locale, Dictionary> = {
 		"auth.signupSuccessInvite": "Sign up successful and invite accepted",
 		"auth.inviteLoading": "Loading invite...",
 		"auth.inviteAccepting": "You are accepting an invite.",
-		"auth.inviteHint": "Sign up with the email address that received the invite.",
+		"auth.inviteHint":
+			"Sign up with the email address that received the invite.",
 		"auth.inviteInvalid": "Invite is not valid.",
 		"auth.err.nameMin": "Name must be at least 2 characters",
 		"auth.err.emailInvalid": "Invalid email address",
@@ -114,7 +118,8 @@ const dictionaries: Record<Locale, Dictionary> = {
 		"login.step.build": "Build flow",
 		"login.step.reply": "Reply safely",
 		"login.hero": "Access your {app} workspace.",
-		"login.heroDescription": "Sign in to manage devices, deploy flow automations, and monitor conversation runs from the dashboard shell.",
+		"login.heroDescription":
+			"Sign in to manage devices, deploy flow automations, and monitor conversation runs from the dashboard shell.",
 		"login.signUpTitle": "Create workspace account",
 		"login.welcomeBack": "Welcome back",
 		"login.signUpHint": "Create an account to start building WhatsApp flows.",
@@ -122,8 +127,10 @@ const dictionaries: Record<Locale, Dictionary> = {
 		"organizations.title": "Select an organization",
 		"organizations.description": "Choose the organization you want to manage.",
 		"organizations.empty": "No organizations available",
-		"organizations.emptyHint": "Ask an organization administrator to add you as a member.",
-		"organizations.missingSlug": "This workspace is missing its address and cannot be opened yet. An administrator needs to finish setting it up.",
+		"organizations.emptyHint":
+			"Ask an organization administrator to add you as a member.",
+		"organizations.missingSlug":
+			"This workspace is missing its address and cannot be opened yet. An administrator needs to finish setting it up.",
 	},
 	pt: {
 		"common.language": "Idioma",
@@ -181,21 +188,27 @@ const dictionaries: Record<Locale, Dictionary> = {
 		"nav.accountDetails": "Detalhes da conta",
 		"nav.contactSupport": "Falar com o suporte",
 		"nav.account": "Conta",
-		"dashboard.subtitle": "Gerencie dispositivos, fluxos, caixa de entrada e registros de automação.",
+		"dashboard.subtitle":
+			"Gerencie dispositivos, fluxos, caixa de entrada e registros de automação.",
 		"login.step.pair": "Conectar dispositivo",
 		"login.step.build": "Criar fluxo",
 		"login.step.reply": "Responder com segurança",
 		"login.hero": "Acesse seu espaço de trabalho {app}.",
-		"login.heroDescription": "Entre para gerenciar dispositivos, publicar automações de fluxo e acompanhar execuções de conversa pelo painel.",
+		"login.heroDescription":
+			"Entre para gerenciar dispositivos, publicar automações de fluxo e acompanhar execuções de conversa pelo painel.",
 		"login.signUpTitle": "Criar conta do espaço de trabalho",
 		"login.welcomeBack": "Bem-vindo de volta",
-		"login.signUpHint": "Crie uma conta para começar a montar fluxos de WhatsApp.",
+		"login.signUpHint":
+			"Crie uma conta para começar a montar fluxos de WhatsApp.",
 		"login.signInHint": "Entre para continuar no seu painel.",
 		"organizations.title": "Selecione uma organização",
-		"organizations.description": "Escolha a organização que você quer gerenciar.",
+		"organizations.description":
+			"Escolha a organização que você quer gerenciar.",
 		"organizations.empty": "Nenhuma organização disponível",
-		"organizations.emptyHint": "Peça a um administrador da organização para adicioná-lo como membro.",
-		"organizations.missingSlug": "Este espaço de trabalho está sem endereço e ainda não pode ser aberto. Um administrador precisa concluir a configuração.",
+		"organizations.emptyHint":
+			"Peça a um administrador da organização para adicioná-lo como membro.",
+		"organizations.missingSlug":
+			"Este espaço de trabalho está sem endereço e ainda não pode ser aberto. Um administrador precisa concluir a configuração.",
 	},
 	es: {
 		"common.language": "Idioma",
@@ -227,7 +240,8 @@ const dictionaries: Record<Locale, Dictionary> = {
 		"auth.signupSuccessInvite": "Cuenta creada e invitación aceptada",
 		"auth.inviteLoading": "Cargando invitación...",
 		"auth.inviteAccepting": "Estás aceptando una invitación.",
-		"auth.inviteHint": "Crea la cuenta con el correo que recibió la invitación.",
+		"auth.inviteHint":
+			"Crea la cuenta con el correo que recibió la invitación.",
 		"auth.inviteInvalid": "La invitación no es válida.",
 		"auth.err.nameMin": "El nombre debe tener al menos 2 caracteres",
 		"auth.err.emailInvalid": "Correo electrónico no válido",
@@ -253,21 +267,26 @@ const dictionaries: Record<Locale, Dictionary> = {
 		"nav.accountDetails": "Detalles de la cuenta",
 		"nav.contactSupport": "Contactar con soporte",
 		"nav.account": "Cuenta",
-		"dashboard.subtitle": "Gestiona dispositivos, flujos, bandeja de entrada y registros de automatización.",
+		"dashboard.subtitle":
+			"Gestiona dispositivos, flujos, bandeja de entrada y registros de automatización.",
 		"login.step.pair": "Conectar dispositivo",
 		"login.step.build": "Crear flujo",
 		"login.step.reply": "Responder de forma segura",
 		"login.hero": "Accede a tu espacio de trabajo {app}.",
-		"login.heroDescription": "Inicia sesión para gestionar dispositivos, desplegar automatizaciones de flujo y supervisar las ejecuciones de conversación desde el panel.",
+		"login.heroDescription":
+			"Inicia sesión para gestionar dispositivos, desplegar automatizaciones de flujo y supervisar las ejecuciones de conversación desde el panel.",
 		"login.signUpTitle": "Crear cuenta del espacio de trabajo",
 		"login.welcomeBack": "Bienvenido de nuevo",
-		"login.signUpHint": "Crea una cuenta para empezar a construir flujos de WhatsApp.",
+		"login.signUpHint":
+			"Crea una cuenta para empezar a construir flujos de WhatsApp.",
 		"login.signInHint": "Inicia sesión para continuar a tu panel.",
 		"organizations.title": "Selecciona una organización",
 		"organizations.description": "Elige la organización que quieres gestionar.",
 		"organizations.empty": "No hay organizaciones disponibles",
-		"organizations.emptyHint": "Pide a un administrador de la organización que te añada como miembro.",
-		"organizations.missingSlug": "Este espacio de trabajo no tiene dirección y aún no se puede abrir. Un administrador debe terminar de configurarlo.",
+		"organizations.emptyHint":
+			"Pide a un administrador de la organización que te añada como miembro.",
+		"organizations.missingSlug":
+			"Este espacio de trabajo no tiene dirección y aún no se puede abrir. Un administrador debe terminar de configurarlo.",
 	},
 };
 
@@ -276,7 +295,8 @@ export function translate(
 	key: string,
 	values?: Record<string, string | number>,
 ) {
-	const template = dictionaries[locale]?.[key] ?? dictionaries[defaultLocale][key] ?? key;
+	const template =
+		dictionaries[locale]?.[key] ?? dictionaries[defaultLocale][key] ?? key;
 
 	if (!values) return template;
 

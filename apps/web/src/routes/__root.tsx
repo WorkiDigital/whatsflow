@@ -10,11 +10,10 @@ import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@whatsapp-flow/api/routers/index";
 import { Toaster } from "@whatsapp-flow/ui/components/sonner";
 import { lazy, Suspense, useEffect } from "react";
-
+import type { Locale } from "@/i18n/dictionaries";
+import { I18nProvider, useI18n } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 import appCss from "../index.css?url";
-import { I18nProvider, useI18n } from "@/i18n/provider";
-import type { Locale } from "@/i18n/dictionaries";
 export interface RouterAppContext {
 	trpc: TRPCOptionsProxy<AppRouter>;
 	queryClient: QueryClient;

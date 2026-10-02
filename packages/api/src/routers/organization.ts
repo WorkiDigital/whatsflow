@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import { user } from "@whatsapp-flow/db/schema/auth";
 import { seedOrganizationRbac } from "@whatsapp-flow/db/organization-rbac";
+import { user } from "@whatsapp-flow/db/schema/auth";
 import {
 	tenant,
 	tenantMember,

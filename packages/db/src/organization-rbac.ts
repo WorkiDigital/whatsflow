@@ -1,3 +1,4 @@
+import { and, eq } from "drizzle-orm";
 import type { createDb } from "./index";
 import {
 	tenant,
@@ -7,7 +8,6 @@ import {
 	tenantRoleAssignment,
 	tenantRolePermission,
 } from "./schema/tenant";
-import { and, eq } from "drizzle-orm";
 
 export const organizationPermissions = [
 	{

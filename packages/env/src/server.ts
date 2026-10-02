@@ -70,7 +70,8 @@ export const env = createEnv({
 		METRICS_TOKEN: z.string().optional(),
 		MCP_ENABLED: z
 			.preprocess((value) => {
-				if (value === undefined || value === null || value === "") return undefined;
+				if (value === undefined || value === null || value === "")
+					return undefined;
 				if (value === "false" || value === false) return false;
 				return true;
 			}, z.boolean())

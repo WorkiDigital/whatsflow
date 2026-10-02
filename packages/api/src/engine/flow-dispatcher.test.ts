@@ -12,6 +12,9 @@ mock.module("@whatsapp-flow/whatsapp", () => ({
 	connectionManager: { on: mock(() => undefined) },
 	derivePrivateIdentityKey: () => "identity",
 	matchesKeywordTrigger: () => true,
+	deriveThreadKey: mock(),
+	phoneNumberFromJid: mock(),
+	sendDeviceMessage: mock(),
 }));
 
 const { getIncomingMessageDispatchAction, matchesMessageTriggerConfig } =

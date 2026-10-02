@@ -123,9 +123,7 @@ export default function SignUpForm({
 						) : hasValidInvite ? (
 							<div className="space-y-1">
 								<p className="font-medium">{t("auth.inviteAccepting")}</p>
-								<p className="text-muted-foreground">
-									{t("auth.inviteHint")}
-								</p>
+								<p className="text-muted-foreground">{t("auth.inviteHint")}</p>
 							</div>
 						) : (
 							<p className="text-destructive">{t("auth.inviteInvalid")}</p>

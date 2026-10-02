@@ -1,11 +1,7 @@
-import { seedOrganizationRbac } from "./organization-rbac";
-import {
-	tenant,
-	tenantMember,
-	tenantRoleAssignment,
-} from "./schema/tenant";
-import { eq } from "drizzle-orm";
 import { createHash } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { seedOrganizationRbac } from "./organization-rbac";
+import { tenant, tenantMember, tenantRoleAssignment } from "./schema/tenant";
 
 type Database = ReturnType<typeof import("./index").createDb>;
 
@@ -33,11 +29,7 @@ function baseSlug(name: string, userId: string) {
 	return `workspace-${createHash("sha256").update(userId).digest("hex").slice(0, 8)}`;
 }
 
-async function findAvailableSlug(
-	db: Database,
-	name: string,
-	userId: string,
-) {
+async function findAvailableSlug(db: Database, name: string, userId: string) {
 	const base = baseSlug(name, userId);
 
 	for (let attempt = 0; attempt < MAX_SLUG_ATTEMPTS; attempt++) {
@@ -76,10 +68,7 @@ export async function repairWorkspaceSlug(
 ) {
 	const slug = await findAvailableSlug(db, creatorName, organization.id);
 
-	await db
-		.update(tenant)
-		.set({ slug })
-		.where(eq(tenant.id, organization.id));
+	await db.update(tenant).set({ slug }).where(eq(tenant.id, organization.id));
 
 	return slug;
 }

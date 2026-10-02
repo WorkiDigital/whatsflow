@@ -1,5 +1,10 @@
 import { describe, expect, mock, test } from "bun:test";
 
+process.env.DATABASE_URL ??= "postgres://user:pass@localhost:5432/test";
+process.env.AUTH_SECRET ??= "x".repeat(32);
+process.env.AUTH_URL ??= "http://localhost:3000";
+process.env.CORS_ORIGIN ??= "http://localhost:3001";
+
 mock.module("@whatsapp-flow/db", () => ({
 	db: {
 		select: () => ({
@@ -36,6 +41,12 @@ mock.module("./group-metadata-store", () => ({
 }));
 mock.module("./message-content", () => ({
 	normalizeBaileysMessage: mock(),
+}));
+// These tests exercise Baileys; keep the Meta transport out of the mock graph.
+mock.module("./providers/meta/transport", () => ({
+	connectMetaDevice: mock(),
+	disconnectMetaDevice: mock(),
+	logoutMetaDevice: mock(),
 }));
 const { ConnectionManager } = await import("./connection-manager");
 const baileys = (await import("baileys")) as unknown as {

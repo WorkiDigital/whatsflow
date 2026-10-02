@@ -1,11 +1,10 @@
 import { getRequestHeader } from "@tanstack/react-start/server";
-
+import type { Locale } from "../i18n/dictionaries";
 import {
 	isLocale,
 	localeCookieName,
 	negotiateLocale,
 } from "../i18n/dictionaries";
-import type { Locale } from "../i18n/dictionaries";
 
 /**
  * Resolves the locale for the initial server render: an explicit cookie choice

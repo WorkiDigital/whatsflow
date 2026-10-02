@@ -1,5 +1,5 @@
-import { createCaller, appRouter } from "@whatsapp-flow/api/routers/index";
 import type { Context } from "@whatsapp-flow/api/context";
+import { appRouter } from "@whatsapp-flow/api/routers/index";
 import { createDb } from "@whatsapp-flow/db";
 import { env } from "@whatsapp-flow/env/server";
 import { z } from "zod";
@@ -15,7 +15,7 @@ import { z } from "zod";
  * identifies a user; it never grants access beyond that user's own.
  */
 
-type Caller = ReturnType<typeof createCaller<Context>>;
+type Caller = ReturnType<typeof appRouter.createCaller>;
 
 export type McpTool = {
 	name: string;
@@ -42,7 +42,7 @@ function callerForUser(userId: string): Caller {
 		requestUserAgent: "mcp",
 	} as unknown as Context;
 
-	return createCaller(appRouter, context);
+	return appRouter.createCaller(context);
 }
 
 export const mcpTools: McpTool[] = [
@@ -72,10 +72,10 @@ export const mcpTools: McpTool[] = [
 		inputSchema: z.object({ organizationId, flowId: z.string().min(1) }),
 		readOnly: true,
 		invoke: (caller, input) => {
-			const { flowId } = z
+			const { organizationId: id, flowId } = z
 				.object({ organizationId, flowId: z.string().min(1) })
 				.parse(input);
-			return caller.flow.getById({ id: flowId });
+			return caller.flow.getById({ tenantId: id, id: flowId });
 		},
 	},
 	{
@@ -89,14 +89,18 @@ export const mcpTools: McpTool[] = [
 		}),
 		readOnly: false,
 		invoke: (caller, input) => {
-			const { flowId, status } = z
+			const {
+				organizationId: id,
+				flowId,
+				status,
+			} = z
 				.object({
 					organizationId,
 					flowId: z.string().min(1),
 					status: z.enum(["draft", "active", "paused"]),
 				})
 				.parse(input);
-			return caller.flow.toggleStatus({ id: flowId, status });
+			return caller.flow.toggleStatus({ tenantId: id, id: flowId, status });
 		},
 	},
 	{
@@ -122,7 +126,12 @@ export const mcpTools: McpTool[] = [
 		}),
 		readOnly: true,
 		invoke: (caller, input) => {
-			const { organizationId: id, flowId, deviceId, limit } = z
+			const {
+				organizationId: id,
+				flowId,
+				deviceId,
+				limit,
+			} = z
 				.object({
 					organizationId,
 					flowId: z.string().optional(),
@@ -181,17 +190,7 @@ export function mcpConfigured() {
 
 /** Converts a zod schema into the JSON Schema shape MCP clients expect. */
 export function toJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
-	const def = schema._def as {
-		typeName?: string;
-		innerType?: z.ZodTypeAny;
-	};
-	if (
-		(def.typeName === "ZodOptional" || def.typeName === "ZodDefault") &&
-		def.innerType
-	) {
-		return toJsonSchema(def.innerType);
-	}
-	return { type: "object", additionalProperties: true };
+	return z.toJSONSchema(schema, { target: "draft-7", io: "input" });
 }
 
 export function listMcpTools() {
@@ -203,7 +202,11 @@ export function listMcpTools() {
 	}));
 }
 
-export async function callMcpTool(userId: string, name: string, input: unknown) {
+export async function callMcpTool(
+	userId: string,
+	name: string,
+	input: unknown,
+) {
 	const tool = mcpTools.find((candidate) => candidate.name === name);
 	if (!tool) {
 		throw new Error(`Unknown tool: ${name}`);

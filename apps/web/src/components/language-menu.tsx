@@ -1,18 +1,11 @@
 import {
-	DropdownMenu,
-	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
-	DropdownMenuTrigger,
 } from "@whatsapp-flow/ui/components/dropdown-menu";
 import { Check, Languages } from "lucide-react";
-
-import {
-	localeLabels,
-	supportedLocales,
-} from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/dictionaries";
+import { localeLabels, supportedLocales } from "@/i18n/dictionaries";
 import { useI18n } from "@/i18n/provider";
 
 export function LanguageMenuItem() {

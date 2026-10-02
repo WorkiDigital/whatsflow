@@ -157,3 +157,34 @@ custou uma revisão manual inteira para encontrar.
 7. O cookie `wf_locale` continua válido entre sessões?
 8. Faltam chaves de tradução dinâmicas nos 70 dicionários?
 9. Textos em inglês ainda existem hardcoded nas 28 rotas não traduzidas?
+## Validação para integração na main — 2026-10-02
+
+A revisão anterior acima registrava uma implementação ainda não validada.
+Esta etapa corrigiu os bloqueios encontrados antes da integração:
+
+- Lockfile atualizado para incluir o workspace MCP; instalação com
+  `bun install --frozen-lockfile` confirmada sem alterações.
+- MCP usa `appRouter.createCaller`, imports exportados corretamente e
+  `tenantId` nas operações de leitura e alteração de fluxo.
+- Schemas MCP gerados pelo Zod com argumentos, obrigatoriedade e enums reais.
+- JSX da tela de login corrigido, chave de lista corrigida e tipo do roteador
+  assíncrono ajustado; imports e formatação revisados.
+- Mocks de testes existentes atualizados para os exports atuais de WhatsApp
+  e transporte Meta. A suíte deve usar `bun test --isolate`, pois os mocks de
+  módulos não podem contaminar os outros arquivos.
+
+Validação executada com Bun 1.3.13:
+
+- `bun install --frozen-lockfile`: passou.
+- `VITE_SERVER_URL=https://n8n-whatsapp-flow-api.ubufeb.easypanel.host bun run check:ci`:
+  passou (tipos, Biome e builds de Web/API).
+- `bun test --isolate`: 206 testes passaram, zero falhas.
+
+Limites: build local não substitui um deploy validado. O HTTP 500 em
+`flow.list` do serviço antigo continua sem causa interna identificada.
+O backfill não foi executado nesta etapa contra produção. Traduções ainda
+cobrem o shell, login e partes do painel; as rotas restantes precisam de
+tradução. MCP exige configuração de `MCP_ENABLED` e `MCP_TOKEN` na API;
+esta integração não cria credenciais nem ativa o endpoint em produção.
+Os itens de concorrência/idempotência do provisionamento listados acima
+continuam como revisão pendente.

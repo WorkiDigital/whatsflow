@@ -1,10 +1,5 @@
-import {
-	callMcpTool,
-	listMcpTools,
-	mcpEnabled,
-	mcpConfigured,
-} from "./index";
 import { env } from "@whatsapp-flow/env/server";
+import { callMcpTool, listMcpTools, mcpConfigured, mcpEnabled } from "./index";
 
 /**
  * JSON-RPC 2.0 transport for the MCP tools, shaped so an MCP client (Claude
@@ -38,7 +33,10 @@ function errorResponse(
 	return { jsonrpc: "2.0", id, error: { code, message } };
 }
 
-function okResponse(id: string | number | null, result: unknown): JsonRpcResponse {
+function okResponse(
+	id: string | number | null,
+	result: unknown,
+): JsonRpcResponse {
 	return { jsonrpc: "2.0", id, result };
 }
 
@@ -80,9 +78,7 @@ export async function handleJsonRpc(
 			try {
 				const result = await callMcpTool(userId, name, args);
 				return okResponse(id, {
-					content: [
-						{ type: "text", text: JSON.stringify(result, null, 2) },
-					],
+					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 					isError: false,
 				});
 			} catch (error) {
