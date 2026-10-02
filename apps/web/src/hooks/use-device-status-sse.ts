@@ -1,0 +1,61 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useActiveOrganization } from "@/components/active-organization";
+import { useTRPC } from "@/utils/trpc";
+
+type DeviceListItem = {
+	id: string;
+	name: string;
+	phoneNumber: string | null;
+	status: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+type DeviceStatusEvent = {
+	type: "status";
+	deviceId: string;
+	status: DeviceListItem["status"];
+	phoneNumber?: string | null;
+};
+
+export function useDeviceStatusSSE() {
+	const organization = useActiveOrganization();
+	const trpc = useTRPC();
+	const queryClient = useQueryClient();
+
+	useEffect(() => {
+		const es = new EventSource(
+			`${import.meta.env.VITE_SERVER_URL}/api/events?tenantId=${encodeURIComponent(organization.id)}`,
+			{
+				withCredentials: true,
+			},
+		);
+
+		es.addEventListener("message", (event) => {
+			const data = JSON.parse(event.data) as DeviceStatusEvent;
+
+			if (data.type === "status") {
+				queryClient.setQueryData<DeviceListItem[]>(
+					trpc.device.list.queryKey({ tenantId: organization.id }),
+					(old) => {
+						if (!old) return old;
+						return old.map((device) =>
+							device.id === data.deviceId
+								? {
+										...device,
+										status: data.status,
+										phoneNumber: data.phoneNumber ?? device.phoneNumber,
+									}
+								: device,
+						);
+					},
+				);
+			}
+		});
+
+		return () => {
+			es.close();
+		};
+	}, [organization.id, queryClient, trpc]);
+}

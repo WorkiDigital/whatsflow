@@ -1,0 +1,3 @@
+{
+	"extends": "@whatsapp-flow/config/tsconfig.base.json"
+}
