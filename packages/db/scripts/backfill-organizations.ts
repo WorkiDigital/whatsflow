@@ -7,10 +7,11 @@
  * Run with: bun run db:backfill
  */
 import dotenv from "dotenv";
-import { isNull } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { createDb } from "../src/index";
 import { backfillOrganizationRbac } from "../src/organization-rbac";
 import { repairWorkspaceSlug } from "../src/provision-workspace";
+import { user } from "../src/schema/auth";
 import { tenant } from "../src/schema/tenant";
 
 async function main() {
@@ -26,17 +27,29 @@ async function main() {
 	const db = createDb();
 
 	const missingSlugs = await db
-		.select({ id: tenant.id, name: tenant.name })
+		.select({
+			id: tenant.id,
+			name: tenant.name,
+			createdByUserId: tenant.createdByUserId,
+			creatorName: user.name,
+		})
 		.from(tenant)
+		.innerJoin(user, eq(user.id, tenant.createdByUserId))
 		.where(isNull(tenant.slug));
 
 	console.log(`Organizations missing a slug: ${missingSlugs.length}`);
 
 	for (const organization of missingSlugs) {
-		const slug = await repairWorkspaceSlug(db, {
-			id: organization.id,
-			name: organization.name,
-		});
+		// Derive the slug from the creator's name, which is what signup used,
+		// rather than the "<name>'s workspace" organization label.
+		const slug = await repairWorkspaceSlug(
+			db,
+			{
+				id: organization.id,
+				createdByUserId: organization.createdByUserId,
+			},
+			organization.creatorName,
+		);
 		console.log(`  ${organization.name} -> ${slug}`);
 	}
 

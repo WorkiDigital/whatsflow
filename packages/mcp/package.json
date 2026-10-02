@@ -1,0 +1,19 @@
+{
+	"name": "@whatsapp-flow/mcp",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"dependencies": {
+		"@whatsapp-flow/api": "workspace:*",
+		"@whatsapp-flow/db": "workspace:*",
+		"@whatsapp-flow/env": "workspace:*",
+		"zod": "catalog:"
+	}
+}

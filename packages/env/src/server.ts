@@ -68,6 +68,14 @@ export const env = createEnv({
 		JOB_WORKER_CONCURRENCY: z.coerce.number().int().min(1).default(5),
 		JOB_LEASE_SECONDS: z.coerce.number().int().min(1).default(60),
 		METRICS_TOKEN: z.string().optional(),
+		MCP_ENABLED: z
+			.preprocess((value) => {
+				if (value === undefined || value === null || value === "") return undefined;
+				if (value === "false" || value === false) return false;
+				return true;
+			}, z.boolean())
+			.default(false),
+		MCP_TOKEN: z.string().optional(),
 		SMTP_HOST: z.string().optional(),
 		SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
 		SMTP_SECURE: z

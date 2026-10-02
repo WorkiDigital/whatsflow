@@ -1,5 +1,9 @@
 import { seedOrganizationRbac } from "./organization-rbac";
-import { tenant, tenantMember } from "./schema/tenant";
+import {
+	tenant,
+	tenantMember,
+	tenantRoleAssignment,
+} from "./schema/tenant";
 import { eq } from "drizzle-orm";
 import { createHash } from "node:crypto";
 
@@ -62,12 +66,15 @@ async function findAvailableSlug(
 /**
  * Assigns a slug to an organization that predates workspace provisioning and
  * therefore has none. Used by the backfill script to repair existing rows.
+ * The slug is derived from the workspace's creator name, not the organization
+ * name, so it matches what signup would have produced.
  */
 export async function repairWorkspaceSlug(
 	db: Database,
-	organization: { id: string; name: string },
+	organization: { id: string; createdByUserId: string },
+	creatorName: string,
 ) {
-	const slug = await findAvailableSlug(db, organization.name, organization.id);
+	const slug = await findAvailableSlug(db, creatorName, organization.id);
 
 	await db
 		.update(tenant)

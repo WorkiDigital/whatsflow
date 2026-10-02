@@ -31,6 +31,12 @@ import {
 } from "@whatsapp-flow/api/engine/webhook-dispatcher";
 import { logger as apiLogger } from "@whatsapp-flow/api/observability/logger";
 import { renderMetrics } from "@whatsapp-flow/api/observability/metrics";
+import {
+	handleJsonRpc,
+	mcpConfigured,
+	mcpEnabled,
+} from "@whatsapp-flow/mcp/jsonrpc";
+import { resolveMcpCredential } from "@whatsapp-flow/mcp/credentials";
 import { seedRbac } from "@whatsapp-flow/api/rbac";
 import { appRouter } from "@whatsapp-flow/api/routers/index";
 import { auth } from "@whatsapp-flow/auth";
@@ -693,6 +699,39 @@ app.get("/metrics", (c) => {
 
 app.get("/", (c) => {
 	return c.text("OK");
+});
+
+/**
+ * MCP endpoint. MCP_TOKEN is a JSON map of userId -> secret, so an operator
+ * issues one credential per user and can revoke them individually. Every tool
+ * still runs through the organization permission checks for that user.
+ */
+app.post("/mcp", async (c) => {
+	if (!mcpEnabled()) {
+		return c.json({ error: "MCP server is disabled" }, 404);
+	}
+
+	if (!mcpConfigured() || !env.MCP_TOKEN) {
+		return c.json({ error: "MCP server is not configured" }, 503);
+	}
+
+	const authorization = c.req.header("authorization") ?? "";
+	const token = authorization.startsWith("Bearer ")
+		? authorization.slice("Bearer ".length)
+		: "";
+
+	const credential = resolveMcpCredential(token);
+	if (!credential) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
+
+	const body = await c.req.json().catch(() => null);
+	if (!body) {
+		return c.json({ error: "Invalid JSON body" }, 400);
+	}
+
+	const response = await handleJsonRpc(body, credential.userId);
+	return c.json(response, response.error ? 400 : 200);
 });
 
 const db = createDb();
