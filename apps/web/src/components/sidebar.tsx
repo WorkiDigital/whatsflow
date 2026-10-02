@@ -34,92 +34,93 @@ import {
 } from "lucide-react";
 
 import { useActiveOrganization } from "@/components/active-organization";
+import { useI18n } from "@/i18n/provider";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
 
 const navItems = [
 	{
 		to: "/dashboard/$organizationSlug",
-		label: "Overview",
+		labelKey: "nav.overview",
 		icon: LayoutDashboard,
 		exact: true,
 	},
 	{
 		to: "/dashboard/$organizationSlug/devices",
-		label: "Devices",
+		labelKey: "nav.devices",
 		icon: Smartphone,
 		exact: false,
 		permission: "devices.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/flows",
-		label: "Flows",
+		labelKey: "nav.flows",
 		icon: MessageSquare,
 		exact: false,
 		permission: "flows.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/inbox",
-		label: "Inbox",
+		labelKey: "nav.inbox",
 		icon: Inbox,
 		exact: false,
 		permission: "inbox.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/contacts",
-		label: "Contacts",
+		labelKey: "nav.contacts",
 		icon: Users,
 		exact: false,
 	},
 	{
 		to: "/dashboard/$organizationSlug/groups",
-		label: "Groups",
+		labelKey: "nav.groups",
 		icon: UsersRound,
 		exact: false,
 	},
 	{
 		to: "/dashboard/$organizationSlug/newsletters",
-		label: "Newsletters",
+		labelKey: "nav.newsletters",
 		icon: Megaphone,
 		exact: false,
 	},
 	{
 		to: "/dashboard/$organizationSlug/logs",
-		label: "Logs",
+		labelKey: "nav.logs",
 		icon: Activity,
 		exact: false,
 	},
 	{
 		to: "/dashboard/$organizationSlug/webhooks",
-		label: "Webhooks",
+		labelKey: "nav.webhooks",
 		icon: Webhook,
 		exact: false,
 		permission: "webhooks.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/users",
-		label: "Users",
+		labelKey: "nav.users",
 		icon: UserCircle,
 		exact: false,
 		permission: "users.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/roles",
-		label: "Roles",
+		labelKey: "nav.roles",
 		icon: ShieldCheck,
 		exact: false,
 		permission: "roles.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/audit",
-		label: "Audit",
+		labelKey: "nav.audit",
 		icon: ClipboardList,
 		exact: false,
 		permission: "audit.read",
 	},
 	{
 		to: "/dashboard/$organizationSlug/settings",
-		label: "Settings",
+		labelKey: "nav.settings",
 		icon: Settings,
 		exact: false,
 		permission: "settings.read",
@@ -197,6 +198,7 @@ function SidebarNav() {
 	const location = useLocation();
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
+	const { t } = useI18n();
 	const permissionsQuery = useQuery(trpc.rbac.me.queryOptions());
 	const permissions = permissionsQuery.data
 		? new Set(permissionsQuery.data.permissions)
@@ -205,7 +207,7 @@ function SidebarNav() {
 	return (
 		<SidebarMenu>
 			{navItems.map((item) => {
-				const { to, label, icon: Icon, exact } = item;
+				const { to, labelKey, icon: Icon, exact } = item;
 				const permission = "permission" in item ? item.permission : undefined;
 				if (permission && permissions && !permissions.has(permission))
 					return null;
@@ -214,6 +216,7 @@ function SidebarNav() {
 					? location.pathname === path
 					: location.pathname === path ||
 						location.pathname.startsWith(`${path}/`);
+				const label = t(labelKey);
 
 				return (
 					<SidebarMenuItem key={to}>
@@ -240,12 +243,13 @@ function SidebarNav() {
 function SidebarAccountFooter() {
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
+	const { t } = useI18n();
 	const { data: session } = authClient.useSession();
 	const { data: publicSettings } = useQuery(
 		trpc.settings.public.queryOptions(),
 	);
 	const supportEmail = publicSettings?.branding.supportEmail;
-	const userName = session?.user.name || "Account";
+	const userName = session?.user.name || t("nav.account");
 	const userEmail = session?.user.email;
 	const initials = getInitials(session?.user.name, session?.user.email);
 
@@ -272,7 +276,7 @@ function SidebarAccountFooter() {
 					className="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 				>
 					<UserCircle className="size-3.5" />
-					Account details
+					{t("nav.accountDetails")}
 				</Link>
 				{supportEmail && (
 					<a
@@ -280,7 +284,7 @@ function SidebarAccountFooter() {
 						className="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 					>
 						<Mail className="size-3.5" />
-						Contact support
+						{t("nav.contactSupport")}
 					</a>
 				)}
 			</div>
@@ -290,6 +294,7 @@ function SidebarAccountFooter() {
 
 export function DashboardSidebar({ className }: { className?: string }) {
 	const organization = useActiveOrganization();
+	const { t } = useI18n();
 
 	return (
 		<Sidebar collapsible="icon" variant="inset" className={className}>
@@ -309,10 +314,10 @@ export function DashboardSidebar({ className }: { className?: string }) {
 										/>
 									}
 									variant="outline"
-									tooltip="New Flow"
+									tooltip={t("nav.newFlow")}
 								>
 									<Plus />
-									<span>New Flow</span>
+									<span>{t("nav.newFlow")}</span>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
 						</SidebarMenu>
@@ -320,7 +325,7 @@ export function DashboardSidebar({ className }: { className?: string }) {
 				</SidebarGroup>
 
 				<SidebarGroup>
-					<SidebarGroupLabel>Workspace</SidebarGroupLabel>
+					<SidebarGroupLabel>{t("nav.workspace")}</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarNav />
 					</SidebarGroupContent>

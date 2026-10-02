@@ -13,9 +13,12 @@ import { lazy, Suspense, useEffect } from "react";
 
 import { useTRPC } from "@/utils/trpc";
 import appCss from "../index.css?url";
+import { I18nProvider, useI18n } from "@/i18n/provider";
+import type { Locale } from "@/i18n/dictionaries";
 export interface RouterAppContext {
 	trpc: TRPCOptionsProxy<AppRouter>;
 	queryClient: QueryClient;
+	locale: Locale;
 }
 
 const DEFAULT_APP_NAME = "WhatsApp Flow";
@@ -131,25 +134,40 @@ function BrandingRuntime() {
 	return null;
 }
 
+function DocumentLocale() {
+	const { locale } = useI18n();
+
+	useEffect(() => {
+		document.documentElement.lang = locale;
+	}, [locale]);
+
+	return null;
+}
+
 function RootDocument() {
+	const { locale } = Route.useRouteContext();
+
 	return (
-		<html lang="en" className="dark">
-			<head>
-				<HeadContent />
-			</head>
-			<body>
-				<BrandingRuntime />
-				<div className="min-h-svh">
-					<Outlet />
-				</div>
-				<Toaster richColors />
-				{DevelopmentDevtools ? (
-					<Suspense fallback={null}>
-						<DevelopmentDevtools />
-					</Suspense>
-				) : null}
-				<Scripts />
-			</body>
-		</html>
+		<I18nProvider initialLocale={locale}>
+			<html lang="en" className="dark">
+				<head>
+					<HeadContent />
+				</head>
+				<body>
+					<DocumentLocale />
+					<BrandingRuntime />
+					<div className="min-h-svh">
+						<Outlet />
+					</div>
+					<Toaster richColors />
+					{DevelopmentDevtools ? (
+						<Suspense fallback={null}>
+							<DevelopmentDevtools />
+						</Suspense>
+					) : null}
+					<Scripts />
+				</body>
+			</html>
+		</I18nProvider>
 	);
 }

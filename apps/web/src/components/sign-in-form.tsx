@@ -9,6 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 
+import { useI18n } from "@/i18n/provider";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
 
@@ -42,6 +43,7 @@ export default function SignInForm({
 		from: "/",
 	});
 	const trpc = useTRPC();
+	const { t } = useI18n();
 	const { isPending } = authClient.useSession();
 	const { data: publicSettings } = useQuery(
 		trpc.settings.public.queryOptions(),
@@ -57,16 +59,16 @@ export default function SignInForm({
 		if (!inviteToken) return;
 		try {
 			await acceptTenantInvite.mutateAsync({ token: inviteToken });
-			toast.success("Tenant invite accepted");
+			toast.success(t("auth.inviteAccepted"));
 		} catch (error) {
 			if (error instanceof Error && error.message === "Invite not found") {
-				toast.info("This tenant invite is no longer available.");
+				toast.info(t("auth.inviteUnavailable"));
 				return;
 			}
 			toast.error(
 				error instanceof Error
 					? error.message
-					: "Unable to accept tenant invite",
+					: t("auth.inviteError"),
 			);
 		}
 	};
@@ -88,7 +90,7 @@ export default function SignInForm({
 						navigate({
 							to: "/dashboard",
 						});
-						toast.success("Sign in successful");
+						toast.success(t("auth.signInSuccess"));
 					},
 					onError: (error) => {
 						toast.error(error.error.message || error.error.statusText);
@@ -98,8 +100,8 @@ export default function SignInForm({
 		},
 		validators: {
 			onSubmit: z.object({
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
+				email: z.email(t("auth.err.emailInvalid")),
+				password: z.string().min(8, t("auth.err.passwordMin")),
 			}),
 		},
 	});
@@ -165,11 +167,11 @@ export default function SignInForm({
 							onClick={() => signInWithProvider(provider)}
 						>
 							{socialProviderPending === provider.providerId ? (
-								"Redirecting..."
+								{t("auth.redirecting")}
 							) : (
 								<>
 									<ProviderIcon iconUrl={provider.iconUrl} />
-									Continue with {provider.displayName}
+									{t("auth.continueWith", { provider: provider.displayName })}
 								</>
 							)}
 						</Button>
@@ -177,7 +179,7 @@ export default function SignInForm({
 					<div className="relative py-1 text-center">
 						<div className="absolute inset-x-0 top-1/2 border-t" />
 						<span className="relative bg-card px-2 text-muted-foreground text-xs">
-							or continue with email
+							{t("auth.orContinueEmail")}
 						</span>
 					</div>
 				</div>
@@ -195,7 +197,7 @@ export default function SignInForm({
 					<form.Field name="email">
 						{(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Email</Label>
+								<Label htmlFor={field.name}>{t("auth.email")}</Label>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -218,7 +220,7 @@ export default function SignInForm({
 					<form.Field name="password">
 						{(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Password</Label>
+								<Label htmlFor={field.name}>{t("auth.password")}</Label>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -249,7 +251,7 @@ export default function SignInForm({
 							className="w-full"
 							disabled={!canSubmit || isSubmitting}
 						>
-							{isSubmitting ? "Submitting..." : "Sign In"}
+							{isSubmitting ? t("auth.submitting") : t("auth.signIn")}
 						</Button>
 					)}
 				</form.Subscribe>
@@ -258,7 +260,7 @@ export default function SignInForm({
 			{showSignup && (
 				<div className="mt-4 text-center">
 					<Button variant="link" onClick={onSwitchToSignUp}>
-						Need an account? Sign Up
+						{t("auth.noAccount")} {t("auth.signUp")}
 					</Button>
 				</div>
 			)}

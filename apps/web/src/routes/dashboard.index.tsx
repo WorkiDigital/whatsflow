@@ -9,6 +9,8 @@ import {
 } from "@whatsapp-flow/ui/components/card";
 import { Building2 } from "lucide-react";
 
+import { useI18n } from "@/i18n/provider";
+
 export const Route = createFileRoute("/dashboard/")({
 	loader: async ({ context }) => {
 		const organizations = (
@@ -42,6 +44,7 @@ export const Route = createFileRoute("/dashboard/")({
 
 function OrganizationPickerPage() {
 	const { organizations } = Route.useLoaderData();
+	const { t } = useI18n();
 
 	return (
 		<div className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
@@ -50,17 +53,17 @@ function OrganizationPickerPage() {
 					<div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
 						<Building2 className="size-5" />
 					</div>
-					<CardTitle>Select an organization</CardTitle>
+					<CardTitle>{t("organizations.title")}</CardTitle>
 					<CardDescription>
-						Choose the organization you want to manage.
+						{t("organizations.description")}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					{organizations.length === 0 ? (
 						<div className="rounded-lg border border-dashed p-6 text-center">
-							<p className="font-medium text-sm">No organizations available</p>
+							<p className="font-medium text-sm">{t("organizations.empty")}</p>
 							<p className="mt-1 text-muted-foreground text-sm">
-								Ask an organization administrator to add you as a member.
+								{t("organizations.emptyHint")}
 							</p>
 						</div>
 					) : (
@@ -75,8 +78,7 @@ function OrganizationPickerPage() {
 											{organization.name}
 										</span>
 										<span className="mt-1 block text-muted-foreground text-xs">
-											This workspace is missing its address and cannot be opened
-											yet. An administrator needs to finish setting it up.
+											{t("organizations.missingSlug")}
 										</span>
 									</div>
 								) : (

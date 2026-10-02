@@ -9,6 +9,8 @@ import { env } from "@whatsapp-flow/env/web";
 import { toast } from "sonner";
 
 import Loader from "./components/loader";
+import { defaultLocale } from "./i18n/dictionaries";
+import type { Locale } from "./i18n/dictionaries";
 import { routeTree } from "./routeTree.gen";
 import { TRPCProvider } from "./utils/trpc";
 
@@ -61,12 +63,22 @@ const trpc = createTRPCOptionsProxy({
 	queryClient: queryClient,
 });
 
-export const getRouter = () => {
+const getServerRequestLocale = createIsomorphicFn()
+	.client(() => defaultLocale)
+	.server(async () => {
+		const { getRequestLocale } = await import(
+			"./functions/request-locale.server"
+		);
+		return getRequestLocale();
+	});
+
+export const getRouter = async () => {
+	const locale: Locale = await getServerRequestLocale();
 	const router = createTanStackRouter({
 		routeTree,
 		scrollRestoration: true,
 		defaultPreloadStaleTime: 0,
-		context: { trpc, queryClient },
+		context: { trpc, queryClient, locale },
 		defaultPendingComponent: () => <Loader />,
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 		Wrap: ({ children }) => (

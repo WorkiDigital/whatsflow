@@ -7,6 +7,7 @@ import { Label } from "@whatsapp-flow/ui/components/label";
 import { toast } from "sonner";
 import z from "zod";
 
+import { useI18n } from "@/i18n/provider";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
 
@@ -20,6 +21,7 @@ export default function SignUpForm({
 	onSwitchToSignIn: () => void;
 }) {
 	const trpc = useTRPC();
+	const { t } = useI18n();
 	const navigate = useNavigate({
 		from: "/",
 	});
@@ -73,8 +75,8 @@ export default function SignUpForm({
 						});
 						toast.success(
 							inviteToken
-								? "Sign up successful and invite accepted"
-								: "Sign up successful",
+								? t("auth.signupSuccessInvite")
+								: t("auth.signupSuccess"),
 						);
 					},
 					onError: (error) => {
@@ -86,14 +88,14 @@ export default function SignUpForm({
 		validators: {
 			onSubmit: z
 				.object({
-					name: z.string().trim().min(2, "Name must be at least 2 characters"),
-					email: z.email("Invalid email address"),
-					password: z.string().min(8, "Password must be at least 8 characters"),
-					confirmPassword: z.string().min(1, "Confirm your password"),
+					name: z.string().trim().min(2, t("auth.err.nameMin")),
+					email: z.email(t("auth.err.emailInvalid")),
+					password: z.string().min(8, t("auth.err.passwordMin")),
+					confirmPassword: z.string().min(1, t("auth.err.passwordConfirm")),
 				})
 				.refine((value) => value.password === value.confirmPassword, {
 					path: ["confirmPassword"],
-					message: "Passwords do not match",
+					message: t("auth.err.passwordMismatch"),
 				}),
 		},
 	});
@@ -117,16 +119,16 @@ export default function SignUpForm({
 				{inviteToken && (
 					<div className="rounded-lg border bg-muted/50 p-3 text-sm">
 						{userInviteQuery.isPending || tenantInviteQuery.isPending ? (
-							<p className="text-muted-foreground">Loading invite...</p>
+							<p className="text-muted-foreground">{t("auth.inviteLoading")}</p>
 						) : hasValidInvite ? (
 							<div className="space-y-1">
-								<p className="font-medium">You are accepting an invite.</p>
+								<p className="font-medium">{t("auth.inviteAccepting")}</p>
 								<p className="text-muted-foreground">
-									Sign up with the email address that received the invite.
+									{t("auth.inviteHint")}
 								</p>
 							</div>
 						) : (
-							<p className="text-destructive">Invite is not valid.</p>
+							<p className="text-destructive">{t("auth.inviteInvalid")}</p>
 						)}
 					</div>
 				)}
@@ -135,7 +137,7 @@ export default function SignUpForm({
 					<form.Field name="name">
 						{(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Name</Label>
+								<Label htmlFor={field.name}>{t("auth.name")}</Label>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -158,7 +160,7 @@ export default function SignUpForm({
 					<form.Field name="email">
 						{(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Email</Label>
+								<Label htmlFor={field.name}>{t("auth.email")}</Label>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -182,7 +184,7 @@ export default function SignUpForm({
 					<form.Field name="password">
 						{(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Password</Label>
+								<Label htmlFor={field.name}>{t("auth.password")}</Label>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -206,7 +208,7 @@ export default function SignUpForm({
 					<form.Field name="confirmPassword">
 						{(field) => (
 							<div className="space-y-2">
-								<Label htmlFor={field.name}>Confirm password</Label>
+								<Label htmlFor={field.name}>{t("auth.confirmPassword")}</Label>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -238,7 +240,7 @@ export default function SignUpForm({
 							className="w-full"
 							disabled={!canSubmit || isSubmitting || !inviteReady}
 						>
-							{isSubmitting ? "Submitting..." : "Sign Up"}
+							{isSubmitting ? t("auth.submitting") : t("auth.signUp")}
 						</Button>
 					)}
 				</form.Subscribe>
@@ -246,7 +248,7 @@ export default function SignUpForm({
 
 			<div className="mt-4 text-center">
 				<Button variant="link" onClick={onSwitchToSignIn}>
-					Already have an account? Sign In
+					{t("auth.hasAccount")} {t("auth.signIn")}
 				</Button>
 			</div>
 		</div>

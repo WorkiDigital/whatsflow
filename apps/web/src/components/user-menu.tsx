@@ -14,6 +14,8 @@ import { Skeleton } from "@whatsapp-flow/ui/components/skeleton";
 import { LogOut, User } from "lucide-react";
 
 import { useActiveOrganization } from "@/components/active-organization";
+import { LanguageMenuItem } from "@/components/language-menu";
+import { useI18n } from "@/i18n/provider";
 import { authClient } from "@/lib/auth-client";
 
 function getInitials(name?: string | null, email?: string | null) {
@@ -29,6 +31,7 @@ function getInitials(name?: string | null, email?: string | null) {
 export default function UserMenu() {
 	const organization = useActiveOrganization();
 	const navigate = useNavigate();
+	const { t } = useI18n();
 	const { data: session, isPending } = authClient.useSession();
 
 	if (isPending) {
@@ -38,7 +41,7 @@ export default function UserMenu() {
 	if (!session) {
 		return (
 			<Link to="/login">
-				<Button variant="outline">Sign In</Button>
+				<Button variant="outline">{t("auth.signIn")}</Button>
 			</Link>
 		);
 	}
@@ -82,8 +85,9 @@ export default function UserMenu() {
 						}
 					>
 						<User className="size-3.5" />
-						Account
+						{t("nav.account")}
 					</DropdownMenuItem>
+					<LanguageMenuItem />
 					<DropdownMenuItem
 						variant="destructive"
 						onClick={() => {
@@ -97,7 +101,7 @@ export default function UserMenu() {
 						}}
 					>
 						<LogOut className="size-3.5" />
-						Sign Out
+						{t("common.signOut")}
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 			</DropdownMenuContent>

@@ -13,6 +13,7 @@ import { useState } from "react";
 import Header from "@/components/header";
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
+import { useI18n } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/login")({
@@ -20,13 +21,14 @@ export const Route = createFileRoute("/login")({
 });
 
 const steps = [
-	{ icon: Smartphone, label: "Pair device" },
-	{ icon: GitBranch, label: "Build flow" },
-	{ icon: MessageSquare, label: "Reply safely" },
+	{ icon: Smartphone, labelKey: "login.step.pair" },
+	{ icon: GitBranch, labelKey: "login.step.build" },
+	{ icon: MessageSquare, labelKey: "login.step.reply" },
 ] as const;
 
 function RouteComponent() {
 	const trpc = useTRPC();
+	const { t } = useI18n();
 	const { data: publicSettings } = useQuery(
 		trpc.settings.public.queryOptions(),
 	);
@@ -63,15 +65,14 @@ function RouteComponent() {
 					)}
 					<div className="space-y-3">
 						<h1 className="font-semibold text-4xl tracking-tight">
-							Access your {appName} workspace.
+							{t("login.hero", { app: appName })}
 						</h1>
 						<p className="max-w-md text-muted-foreground text-sm leading-6">
-							Sign in to manage devices, deploy flow automations, and monitor
-							conversation runs from the dashboard shell.
+							{t("login.heroDescription")}
 						</p>
 					</div>
 					<div className="grid max-w-md gap-2">
-						{steps.map(({ icon: Icon, label }) => (
+						{steps.map(({ icon: Icon, labelKey }) => (
 							<div
 								key={label}
 								className="flex items-center gap-3 border bg-card/70 p-3"
@@ -79,7 +80,7 @@ function RouteComponent() {
 								<span className="flex size-8 items-center justify-center border bg-muted text-primary">
 									<Icon className="size-4" />
 								</span>
-								<p className="font-medium text-sm">{label}</p>
+								<p className="font-medium text-sm">{t(labelKey)}</p>
 							</div>
 						))}
 					</div>
@@ -88,12 +89,10 @@ function RouteComponent() {
 				<Card className="mx-auto w-full max-w-md border-primary/15 bg-card/90 shadow-sm">
 					<CardHeader className="text-center">
 						<CardTitle>
-							{showSignUp ? "Create workspace account" : "Welcome back"}
+							{showSignUp ? t("login.signUpTitle") : t("login.welcomeBack")}
 						</CardTitle>
 						<CardDescription>
-							{showSignUp
-								? "Create an account to start building WhatsApp flows."
-								: "Sign in to continue to your dashboard."}
+							{showSignUp ? t("login.signUpHint") : t("login.signInHint")}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
