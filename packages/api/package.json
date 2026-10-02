@@ -27,6 +27,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@electric-sql/pglite": "0.3.14",
 		"@whatsapp-flow/config": "workspace:*",
 		"hono": "catalog:",
 		"typescript": "catalog:"
