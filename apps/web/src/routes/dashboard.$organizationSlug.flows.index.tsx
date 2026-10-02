@@ -215,6 +215,9 @@ function FlowsPage() {
 				refetch();
 				toast.success(panelT("Status updated"));
 			},
+			onError: (error) => {
+				toast.error(panelT(error.message));
+			},
 		}),
 	);
 
@@ -225,12 +228,7 @@ function FlowsPage() {
 	const requestActivate = (flowId: string) => {
 		const targetFlow = flows.find((f) => f.id === flowId);
 		if (!targetFlow?.deviceId) {
-			// Will error with "Deploy flow to a device before activating"
-			toggleMut.mutate({
-				id: flowId,
-				status: "active",
-				tenantId: organization.id,
-			});
+			toast.error(panelT("Deploy flow to a device before activating"));
 			return;
 		}
 

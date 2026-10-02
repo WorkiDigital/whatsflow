@@ -889,6 +889,10 @@ export const dashboardTranslations: Record<
 		Status: "Estado",
 		"Status reason": "Motivo do estado",
 		"Status updated": "Estado atualizado",
+		"Deploy flow to a device before activating":
+			"Associe o fluxo a um dispositivo antes de ativá-lo",
+		"Device must be connected before activation":
+			"O dispositivo precisa estar conectado antes da ativação",
 		"Still there? Please reply before this session expires.":
 			"Ainda está aí? Responda antes que esta sessão expire.",
 		Stored: "Salvo",
@@ -1985,6 +1989,10 @@ export const dashboardTranslations: Record<
 		Status: "Estado",
 		"Status reason": "Motivo del estado",
 		"Status updated": "Estado actualizado",
+		"Deploy flow to a device before activating":
+			"Asocia el flujo a un dispositivo antes de activarlo",
+		"Device must be connected before activation":
+			"El dispositivo debe estar conectado antes de activar",
 		"Still there? Please reply before this session expires.":
 			"¿Sigues ahí? Responde antes de que esta sesión expire.",
 		Stored: "Guardado",
