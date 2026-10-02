@@ -4,6 +4,7 @@ import { Input } from "@whatsapp-flow/ui/components/input";
 import { cn } from "@whatsapp-flow/ui/lib/utils";
 import { ImageIcon, Loader2, Paperclip, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export interface UploadedMedia {
@@ -38,6 +39,8 @@ export function MediaUpload({
 	className,
 	maxSizeMb = DEFAULT_MAX_MB,
 }: MediaUploadProps) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const createUploadUrl = useMutation(
 		trpc.media.createUploadUrl.mutationOptions(),
@@ -137,17 +140,17 @@ export function MediaUpload({
 				) : value && isImageUrl(value) ? (
 					<img
 						src={value}
-						alt="preview"
+						alt={panelT("preview")}
 						className="max-h-20 rounded object-cover"
 					/>
 				) : (
 					<>
 						<Upload className="size-4 text-muted-foreground" />
 						<span className="text-[10px] text-muted-foreground">
-							{label} · drag & drop or click
+							{label} {panelT("· drag & drop or click")}
 						</span>
 						<span className="text-[9px] text-muted-foreground/70">
-							max {maxSizeMb} MB
+							{panelT("max")} {maxSizeMb} {panelT("MB")}
 						</span>
 					</>
 				)}

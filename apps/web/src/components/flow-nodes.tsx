@@ -33,6 +33,7 @@ import {
 	Video,
 	Webhook,
 } from "lucide-react";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 // ── Node Data Types ──────────────────────────────────────────────
 
@@ -268,6 +269,8 @@ function BaseFlowNode({
 	category: NodeCategory;
 	children?: React.ReactNode;
 }) {
+	const panelT = usePanelTranslation();
+
 	const c = categoryAccents[category];
 	const { deleteElements } = useReactFlow();
 	const isTrigger = data.category === "trigger";
@@ -300,7 +303,9 @@ function BaseFlowNode({
 					<Icon className={cn("size-3.5", c.icon)} />
 				</span>
 				<span className="min-w-0 flex-1 truncate font-medium">
-					{data.label}
+					{data.label === defaultLabels[data.nodeType]
+						? panelT(data.label)
+						: data.label}
 				</span>
 				{!isTrigger && (
 					<Button
@@ -312,7 +317,7 @@ function BaseFlowNode({
 							event.stopPropagation();
 							deleteElements({ nodes: [{ id: data.id }] });
 						}}
-						aria-label="Delete node"
+						aria-label={panelT("Delete node")}
 					>
 						<Trash2 className="size-3" />
 					</Button>
@@ -323,12 +328,12 @@ function BaseFlowNode({
 				{isInteractiveBranchNode(data) &&
 					data.deliveryMode === "native_experimental" && (
 						<span className="text-[10px] text-amber-600">
-							Baileys · experimental
+							{panelT("Baileys · experimental")}
 						</span>
 					)}
 				{children ?? (
 					<span className="text-[10px] text-muted-foreground">
-						Configure this step from the inspector.
+						{panelT("Configure this step from the inspector.")}
 					</span>
 				)}
 			</div>
@@ -351,10 +356,10 @@ function BaseFlowNode({
 						className="flow-node-handle"
 					/>
 					<span className="absolute top-[30%] -right-9 rounded-md border bg-background px-1 text-[9px] text-muted-foreground shadow-xs">
-						true
+						{panelT("true")}
 					</span>
 					<span className="absolute top-[60%] -right-10 rounded-md border bg-background px-1 text-[9px] text-muted-foreground shadow-xs">
-						false
+						{panelT("false")}
 					</span>
 				</>
 			) : optionHandles.length > 0 ? (
@@ -539,6 +544,8 @@ export function SendReactionNode({ data, selected }: NodeProps) {
 }
 
 export function SendTemplateNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as MessageNodeData;
 	return (
 		<BaseFlowNode
@@ -549,7 +556,7 @@ export function SendTemplateNode({ data, selected }: NodeProps) {
 		>
 			{d.templateName && (
 				<span className="text-[10px] text-muted-foreground">
-					{d.templateName} · {d.languageCode ?? "en_US"}
+					{d.templateName} · {d.languageCode ?? panelT("en_US")}
 				</span>
 			)}
 		</BaseFlowNode>
@@ -591,6 +598,8 @@ export function SendButtonNode({ data, selected }: NodeProps) {
 }
 
 export function SendListNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as InteractiveNodeData;
 	return (
 		<BaseFlowNode
@@ -600,7 +609,7 @@ export function SendListNode({ data, selected }: NodeProps) {
 			category="interactive"
 		>
 			<span className="text-[10px] text-muted-foreground">
-				{d.sections?.length ?? 0} sections
+				{d.sections?.length ?? 0} {panelT("sections")}
 			</span>
 			<span className="text-[10px] text-muted-foreground">
 				{getWaitSummary(d)}
@@ -610,6 +619,8 @@ export function SendListNode({ data, selected }: NodeProps) {
 }
 
 export function SendQuickReplyNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as InteractiveNodeData;
 	return (
 		<BaseFlowNode
@@ -619,7 +630,7 @@ export function SendQuickReplyNode({ data, selected }: NodeProps) {
 			category="interactive"
 		>
 			<span className="text-[10px] text-muted-foreground">
-				{d.buttons?.length ?? 0} buttons
+				{d.buttons?.length ?? 0} {panelT("buttons")}
 			</span>
 			<span className="text-[10px] text-muted-foreground">
 				{getWaitSummary(d)}
@@ -629,6 +640,8 @@ export function SendQuickReplyNode({ data, selected }: NodeProps) {
 }
 
 export function SendPollNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as InteractiveNodeData;
 	return (
 		<BaseFlowNode
@@ -643,7 +656,7 @@ export function SendPollNode({ data, selected }: NodeProps) {
 				</span>
 			)}
 			<span className="text-[10px] text-muted-foreground">
-				{d.options?.length ?? 0} options · {getWaitSummary(d)}
+				{d.options?.length ?? 0} {panelT("options ·")} {getWaitSummary(d)}
 			</span>
 		</BaseFlowNode>
 	);
@@ -669,12 +682,15 @@ export function ConditionNode({ data, selected }: NodeProps) {
 }
 
 export function DelayNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as LogicNodeData;
 	return (
 		<BaseFlowNode data={d} selected={selected} icon={Clock} category="logic">
 			{d.delaySeconds != null && (
 				<span className="text-[10px] text-muted-foreground">
-					{d.delaySeconds}s delay
+					{d.delaySeconds}
+					{panelT("s delay")}
 				</span>
 			)}
 		</BaseFlowNode>
@@ -695,6 +711,8 @@ export function SetVariableNode({ data, selected }: NodeProps) {
 }
 
 export function WaitForReplyNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as LogicNodeData;
 	const warningCount = getReplyWarningCount(d);
 	return (
@@ -705,18 +723,23 @@ export function WaitForReplyNode({ data, selected }: NodeProps) {
 			category="logic"
 		>
 			<span className="text-[10px] text-muted-foreground">
-				{d.variableName ?? "reply"} · {d.timeoutMinutes ?? 1440}m
-				{warningCount ? ` · ${warningCount} warnings` : ""}
+				{d.variableName ?? panelT("reply")} · {d.timeoutMinutes ?? 1440}
+				{panelT("m")}
+				{warningCount ? panelT(" · {v0} warnings", { v0: warningCount }) : ""}
 			</span>
 		</BaseFlowNode>
 	);
 }
 
 export function RandomNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as LogicNodeData;
 	return (
 		<BaseFlowNode data={d} selected={selected} icon={Shuffle} category="logic">
-			<span className="text-[10px] text-muted-foreground">Random split</span>
+			<span className="text-[10px] text-muted-foreground">
+				{panelT("Random split")}
+			</span>
 		</BaseFlowNode>
 	);
 }
@@ -749,6 +772,8 @@ export function WebhookCallNode({ data, selected }: NodeProps) {
 }
 
 export function EndNode({ data, selected }: NodeProps) {
+	const panelT = usePanelTranslation();
+
 	const d = data as unknown as ActionNodeData;
 	return (
 		<BaseFlowNode
@@ -757,7 +782,9 @@ export function EndNode({ data, selected }: NodeProps) {
 			icon={StopCircle}
 			category="action"
 		>
-			<span className="text-[10px] text-muted-foreground">End flow</span>
+			<span className="text-[10px] text-muted-foreground">
+				{panelT("End flow")}
+			</span>
 		</BaseFlowNode>
 	);
 }

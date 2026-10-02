@@ -28,6 +28,7 @@ import {
 import { ClipboardList, Download, Search, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 import { useTRPC } from "@/utils/trpc";
 
@@ -62,6 +63,8 @@ function targetLabel(log: AuditLogSummary) {
 }
 
 function AuditPage() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const [query, setQuery] = useState("");
 	const [action, setAction] = useState("");
@@ -101,14 +104,18 @@ function AuditPage() {
 		trpc.audit.verifyRange.mutationOptions({
 			onSuccess: (result) => {
 				if (result.valid) {
-					toast.success(`Audit chain verified (${result.rowCount} rows)`);
+					toast.success(
+						panelT("Audit chain verified ({v0} rows)", { v0: result.rowCount }),
+					);
 				} else {
 					toast.error(
-						`Audit verification failed (${result.failures.length} issues)`,
+						panelT("Audit verification failed ({v0} issues)", {
+							v0: result.failures.length,
+						}),
 					);
 				}
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const exportJson = useMutation(
@@ -124,9 +131,9 @@ function AuditPage() {
 				link.click();
 				URL.revokeObjectURL(url);
 				void exportsQuery.refetch();
-				toast.success("Audit export generated");
+				toast.success(panelT("Audit export generated"));
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const detailQuery = useQuery({
@@ -143,10 +150,12 @@ function AuditPage() {
 	if (auditQuery.error) {
 		return (
 			<div className="space-y-2">
-				<h2 className="font-semibold text-xl">Audit log unavailable</h2>
+				<h2 className="font-semibold text-xl">
+					{panelT("Audit log unavailable")}
+				</h2>
 				<p className="text-muted-foreground text-sm">
 					{auditQuery.error.message === "Admin access required"
-						? "You do not have access to audit logs."
+						? panelT("You do not have access to audit logs.")
 						: auditQuery.error.message}
 				</p>
 			</div>
@@ -158,20 +167,22 @@ function AuditPage() {
 			<div className="space-y-1">
 				<h2 className="flex items-center gap-2 font-semibold text-2xl tracking-tight">
 					<ClipboardList className="size-6 text-primary" />
-					Audit log
+					{panelT("Audit log")}
 				</h2>
 				<p className="text-muted-foreground text-sm">
-					Review sensitive admin, user, settings, auth-provider, and device
-					actions.
+					{panelT(
+						"Review sensitive admin, user, settings, auth-provider, and device actions.",
+					)}
 				</p>
 			</div>
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Security activity</CardTitle>
+					<CardTitle>{panelT("Security activity")}</CardTitle>
 					<CardDescription>
-						Audit events are append-only and redact known secret-bearing keys
-						before persistence.
+						{panelT(
+							"Audit events are append-only and redact known secret-bearing keys before persistence.",
+						)}
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
@@ -180,29 +191,29 @@ function AuditPage() {
 							<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 							<Input
 								className="pl-9"
-								placeholder="Search actor, action, target"
+								placeholder={panelT("Search actor, action, target")}
 								value={query}
 								onChange={(event) => setQuery(event.target.value)}
 							/>
 						</div>
 						<Input
-							placeholder="Action filter"
+							placeholder={panelT("Action filter")}
 							value={action}
 							onChange={(event) => setAction(event.target.value)}
 						/>
 						<Input
-							placeholder="Target type"
+							placeholder={panelT("Target type")}
 							value={targetType}
 							onChange={(event) => setTargetType(event.target.value)}
 						/>
 						<Input
-							aria-label="From date"
+							aria-label={panelT("From date")}
 							type="date"
 							value={from}
 							onChange={(event) => setFrom(event.target.value)}
 						/>
 						<Input
-							aria-label="To date"
+							aria-label={panelT("To date")}
 							type="date"
 							value={to}
 							onChange={(event) => setTo(event.target.value)}
@@ -219,7 +230,7 @@ function AuditPage() {
 									onClick={() => verifyRange.mutate(rangeInput)}
 								>
 									<ShieldCheck className="size-4" />
-									Verify current range
+									{panelT("Verify current range")}
 								</Button>
 							)}
 							{canExport && (
@@ -230,7 +241,7 @@ function AuditPage() {
 									onClick={() => exportJson.mutate(rangeInput)}
 								>
 									<Download className="size-4" />
-									Export JSON
+									{panelT("Export JSON")}
 								</Button>
 							)}
 						</div>
@@ -240,12 +251,14 @@ function AuditPage() {
 						<Table>
 							<TableHeader>
 								<TableRow>
-									<TableHead>Timestamp</TableHead>
-									<TableHead>Actor</TableHead>
-									<TableHead>Action</TableHead>
-									<TableHead>Target</TableHead>
-									<TableHead>IP</TableHead>
-									<TableHead className="text-right">Details</TableHead>
+									<TableHead>{panelT("Timestamp")}</TableHead>
+									<TableHead>{panelT("Actor")}</TableHead>
+									<TableHead>{panelT("Action")}</TableHead>
+									<TableHead>{panelT("Target")}</TableHead>
+									<TableHead>{panelT("IP")}</TableHead>
+									<TableHead className="text-right">
+										{panelT("Details")}
+									</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -253,7 +266,7 @@ function AuditPage() {
 									<TableRow>
 										<TableCell colSpan={6}>
 											<div className="py-8 text-center text-muted-foreground text-sm">
-												Loading audit logs...
+												{panelT("Loading audit logs...")}
 											</div>
 										</TableCell>
 									</TableRow>
@@ -263,7 +276,9 @@ function AuditPage() {
 											<TableCell className="whitespace-nowrap text-sm">
 												{formatTimestamp(log.createdAt)}
 											</TableCell>
-											<TableCell>{log.actorEmail ?? "System"}</TableCell>
+											<TableCell>
+												{log.actorEmail ?? panelT("System")}
+											</TableCell>
 											<TableCell>
 												<Badge variant="outline">{log.action}</Badge>
 											</TableCell>
@@ -284,7 +299,7 @@ function AuditPage() {
 													size="sm"
 													onClick={() => setSelectedId(log.id)}
 												>
-													View
+													{panelT("View")}
 												</Button>
 											</TableCell>
 										</TableRow>
@@ -294,7 +309,7 @@ function AuditPage() {
 									<TableRow>
 										<TableCell colSpan={6}>
 											<div className="py-8 text-center text-muted-foreground text-sm">
-												No audit logs match the current filters.
+												{panelT("No audit logs match the current filters.")}
 											</div>
 										</TableCell>
 									</TableRow>
@@ -304,8 +319,10 @@ function AuditPage() {
 					</div>
 
 					<div className="flex items-center justify-between text-muted-foreground text-xs">
-						<span>{auditQuery.data?.total ?? 0} total events</span>
-						<span>Showing newest 50 events</span>
+						<span>
+							{auditQuery.data?.total ?? 0} {panelT("total events")}
+						</span>
+						<span>{panelT("Showing newest 50 events")}</span>
 					</div>
 				</CardContent>
 			</Card>
@@ -313,10 +330,11 @@ function AuditPage() {
 			{canExport && (
 				<Card>
 					<CardHeader>
-						<CardTitle>Export history</CardTitle>
+						<CardTitle>{panelT("Export history")}</CardTitle>
 						<CardDescription>
-							Recent bounded JSON exports with manifest hashes for evidence
-							tracking.
+							{panelT(
+								"Recent bounded JSON exports with manifest hashes for evidence tracking.",
+							)}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -324,11 +342,11 @@ function AuditPage() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Generated</TableHead>
-										<TableHead>Rows</TableHead>
-										<TableHead>Sequence range</TableHead>
-										<TableHead>Manifest hash</TableHead>
-										<TableHead>Status</TableHead>
+										<TableHead>{panelT("Generated")}</TableHead>
+										<TableHead>{panelT("Rows")}</TableHead>
+										<TableHead>{panelT("Sequence range")}</TableHead>
+										<TableHead>{panelT("Manifest hash")}</TableHead>
+										<TableHead>{panelT("Status")}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -345,7 +363,7 @@ function AuditPage() {
 												{item.manifestHash ?? "—"}
 											</TableCell>
 											<TableCell>
-												<Badge variant="outline">{item.status}</Badge>
+												<Badge variant="outline">{panelT(item.status)}</Badge>
 											</TableCell>
 										</TableRow>
 									))}
@@ -354,7 +372,9 @@ function AuditPage() {
 											<TableRow>
 												<TableCell colSpan={5}>
 													<div className="py-8 text-center text-muted-foreground text-sm">
-														No audit exports have been generated yet.
+														{panelT(
+															"No audit exports have been generated yet.",
+														)}
 													</div>
 												</TableCell>
 											</TableRow>
@@ -374,40 +394,52 @@ function AuditPage() {
 			>
 				<DialogContent className="max-w-3xl">
 					<DialogHeader>
-						<DialogTitle>Audit event details</DialogTitle>
+						<DialogTitle>{panelT("Audit event details")}</DialogTitle>
 						<DialogDescription>
 							{selected
 								? `${selected.action} · ${formatTimestamp(selected.createdAt)}`
-								: "Loading event details..."}
+								: panelT("Loading event details...")}
 						</DialogDescription>
 					</DialogHeader>
 					{selected && (
 						<div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
 							<div className="grid gap-3 rounded-lg border p-3 text-sm sm:grid-cols-2">
 								<div>
-									<p className="text-muted-foreground text-xs">Actor</p>
-									<p>{selected.actorEmail ?? "System"}</p>
+									<p className="text-muted-foreground text-xs">
+										{panelT("Actor")}
+									</p>
+									<p>{selected.actorEmail ?? panelT("System")}</p>
 								</div>
 								<div>
-									<p className="text-muted-foreground text-xs">Request IP</p>
+									<p className="text-muted-foreground text-xs">
+										{panelT("Request IP")}
+									</p>
 									<p>{selected.requestIp ?? "—"}</p>
 								</div>
 								<div>
-									<p className="text-muted-foreground text-xs">Target</p>
+									<p className="text-muted-foreground text-xs">
+										{panelT("Target")}
+									</p>
 									<p>{selected.targetDisplay ?? selected.targetId ?? "—"}</p>
 								</div>
 								<div>
-									<p className="text-muted-foreground text-xs">Target type</p>
+									<p className="text-muted-foreground text-xs">
+										{panelT("Target type")}
+									</p>
 									<p>{selected.targetType}</p>
 								</div>
 								<div className="sm:col-span-2">
-									<p className="text-muted-foreground text-xs">User agent</p>
+									<p className="text-muted-foreground text-xs">
+										{panelT("User agent")}
+									</p>
 									<p className="break-words">
 										{selected.requestUserAgent ?? "—"}
 									</p>
 								</div>
 								<div className="sm:col-span-2">
-									<p className="text-muted-foreground text-xs">Reason</p>
+									<p className="text-muted-foreground text-xs">
+										{panelT("Reason")}
+									</p>
 									<p>{selected.reason ?? "—"}</p>
 								</div>
 							</div>

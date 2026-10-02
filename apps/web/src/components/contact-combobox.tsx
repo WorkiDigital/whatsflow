@@ -16,6 +16,7 @@ import {
 import { cn } from "@whatsapp-flow/ui/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 interface ContactComboboxProps {
@@ -37,6 +38,8 @@ export function ContactCombobox({
 	className,
 	includeGroups = false,
 }: ContactComboboxProps) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const [open, setOpen] = useState(false);
 	const [search, setSearch] = useState("");
@@ -103,14 +106,14 @@ export function ContactCombobox({
 			<PopoverContent className="w-60 p-0" align="start">
 				<Command shouldFilter={false}>
 					<CommandInput
-						placeholder="Search..."
+						placeholder={panelT("Search...")}
 						value={search}
 						onValueChange={setSearch}
 						className="h-8 text-xs"
 					/>
 					<CommandList>
 						<CommandEmpty className="py-4 text-center text-muted-foreground text-xs">
-							No contacts found
+							{panelT("No contacts found")}
 						</CommandEmpty>
 						{contacts.length > 0 && (
 							<CommandGroup heading="Contacts">

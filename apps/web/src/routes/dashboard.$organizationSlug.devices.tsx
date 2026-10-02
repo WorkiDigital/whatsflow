@@ -51,6 +51,7 @@ import {
 	toMetaConfigPayload,
 } from "@/components/meta-device-config-dialog";
 import { useDeviceStatusSSE } from "@/hooks/use-device-status-sse";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/devices")({
@@ -100,6 +101,7 @@ const statusColors: Record<string, string> = {
 };
 
 function DeviceStatusBadge({ status }: { status: string }) {
+	const panelT = usePanelTranslation();
 	return (
 		<span className="inline-flex items-center gap-1.5 text-xs">
 			<span
@@ -108,21 +110,23 @@ function DeviceStatusBadge({ status }: { status: string }) {
 					statusColors[status] ?? "bg-gray-400",
 				)}
 			/>
-			{status}
+			{panelT(status)}
 		</span>
 	);
 }
 
 function ProviderBadge({ provider }: { provider?: string }) {
+	const panelT = usePanelTranslation();
+
 	return provider === "meta_cloud" ? (
 		<Badge variant="secondary" className="gap-1 text-xs">
 			<Cloud className="size-3" />
-			Meta Cloud
+			{panelT("Meta Cloud")}
 		</Badge>
 	) : (
 		<Badge variant="outline" className="gap-1 text-xs">
 			<Smartphone className="size-3" />
-			Baileys
+			{panelT("Baileys")}
 		</Badge>
 	);
 }
@@ -235,6 +239,8 @@ function loadFacebookSdk(appId: string, graphApiVersion: string) {
 }
 
 function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [open, setOpen] = useState(false);
@@ -289,34 +295,34 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 	const create = useMutation(
 		trpc.device.create.mutationOptions({
 			onSuccess: () => {
-				toast.success("Device added");
+				toast.success(panelT("Device added"));
 				reset();
 				setOpen(false);
 				onAdded();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const createMeta = useMutation(
 		trpc.device.createMeta.mutationOptions({
 			onSuccess: () => {
-				toast.success("Meta WhatsApp connection added");
+				toast.success(panelT("Meta WhatsApp connection added"));
 				reset();
 				setOpen(false);
 				onAdded();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const createMetaEmbedded = useMutation(
 		trpc.device.createMetaEmbedded.mutationOptions({
 			onSuccess: () => {
-				toast.success("Meta WhatsApp connection added");
+				toast.success(panelT("Meta WhatsApp connection added"));
 				reset();
 				setOpen(false);
 				onAdded();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const embeddedSignupConfig = useQuery({
@@ -363,11 +369,11 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 	const startEmbeddedSignup = async () => {
 		const config = embeddedSignupConfig.data;
 		if (!name.trim()) {
-			toast.error("Name is required");
+			toast.error(panelT("Name is required"));
 			return;
 		}
 		if (!config?.configured || !config.appId || !config.configId) {
-			toast.error("Meta Embedded Signup is not configured");
+			toast.error(panelT("Meta Embedded Signup is not configured"));
 			return;
 		}
 
@@ -377,13 +383,15 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 				(response) => {
 					const code = response.authResponse?.code;
 					if (!code) {
-						toast.error("Meta Embedded Signup did not return an auth code");
+						toast.error(
+							panelT("Meta Embedded Signup did not return an auth code"),
+						);
 						return;
 					}
 
 					const returnedState = response.authResponse?.state;
 					if (!returnedState || returnedState !== config.state) {
-						toast.error("Meta Embedded Signup state mismatch");
+						toast.error(panelT("Meta Embedded Signup state mismatch"));
 						return;
 					}
 
@@ -398,7 +406,7 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 						pendingEmbeddedAuthRef.current = null;
 						pendingEmbeddedTimeoutRef.current = null;
 						toast.error(
-							"Meta Embedded Signup did not return a phone number ID",
+							panelT("Meta Embedded Signup did not return a phone number ID"),
 						);
 					}, 5000);
 				},
@@ -437,19 +445,20 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger className={cn(buttonVariants({ size: "sm" }), "text-xs")}>
 				<Plus className="size-3.5" />
-				Add Connection
+				{panelT("Add Connection")}
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-2xl">
 				<DialogHeader>
-					<DialogTitle>Add WhatsApp connection</DialogTitle>
+					<DialogTitle>{panelT("Add WhatsApp connection")}</DialogTitle>
 					<DialogDescription>
-						Choose unofficial linked-device access or the official Meta Cloud
-						API.
+						{panelT(
+							"Choose unofficial linked-device access or the official Meta Cloud API.",
+						)}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-4">
 					<div className="space-y-2">
-						<Label htmlFor="provider">Provider</Label>
+						<Label htmlFor="provider">{panelT("Provider")}</Label>
 						<NativeSelect
 							id="provider"
 							className="w-full"
@@ -459,18 +468,20 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 							}
 						>
 							<NativeSelectOption value="baileys">
-								WhatsApp Web / Baileys
+								{panelT("WhatsApp Web / Baileys")}
 							</NativeSelectOption>
 							<NativeSelectOption value="meta_cloud">
-								Official Meta Cloud API
+								{panelT("Official Meta Cloud API")}
 							</NativeSelectOption>
 						</NativeSelect>
 					</div>
 					<div className="space-y-2">
-						<Label htmlFor="name">Name</Label>
+						<Label htmlFor="name">{panelT("Name")}</Label>
 						<Input
 							id="name"
-							placeholder={isMeta ? "Business WhatsApp" : "My Phone"}
+							placeholder={
+								isMeta ? panelT("Business WhatsApp") : panelT("My Phone")
+							}
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 						/>
@@ -480,10 +491,13 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 							<div className="rounded-lg border bg-muted/30 p-3">
 								<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 									<div className="space-y-1">
-										<p className="font-medium text-sm">Connect with Meta</p>
+										<p className="font-medium text-sm">
+											{panelT("Connect with Meta")}
+										</p>
 										<p className="text-muted-foreground text-xs">
-											Recommended for production. Manual setup remains available
-											below.
+											{panelT(
+												"Recommended for production. Manual setup remains available below.",
+											)}
 										</p>
 									</div>
 									<Button
@@ -498,14 +512,14 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 										onClick={startEmbeddedSignup}
 									>
 										<Cloud className="size-3.5" />
-										Connect with Meta
+										{panelT("Connect with Meta")}
 									</Button>
 								</div>
 								{!embeddedSignupConfigured && (
 									<p className="mt-2 text-muted-foreground text-xs">
-										Set META_APP_ID, META_APP_SECRET, and
-										META_EMBEDDED_SIGNUP_CONFIG_ID on the server to enable this
-										path.
+										{panelT(
+											"Set META_APP_ID, META_APP_SECRET, and META_EMBEDDED_SIGNUP_CONFIG_ID on the server to enable this path.",
+										)}
 									</p>
 								)}
 							</div>
@@ -519,7 +533,7 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 				</div>
 				<DialogFooter>
 					<Button variant="outline" onClick={() => handleOpenChange(false)}>
-						Cancel
+						{panelT("Cancel")}
 					</Button>
 					<Button
 						disabled={!canSubmit || isPending}
@@ -539,7 +553,7 @@ function AddDeviceDialog({ onAdded }: { onAdded: () => void }) {
 							});
 						}}
 					>
-						{isPending ? "Creating..." : "Create"}
+						{isPending ? panelT("Creating...") : panelT("Create")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
@@ -558,6 +572,8 @@ function QrModal({
 	onOpenChange: (v: boolean) => void;
 	onStatusChange?: () => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [qrCode, setQrCode] = useState<string | null>(null);
@@ -569,7 +585,7 @@ function QrModal({
 	const pairingCodeMut = useMutation(
 		trpc.device.requestPairingCode.mutationOptions({
 			onSuccess: ({ code }) => setPairingCode(code),
-			onError: () => toast.error("Failed to request pairing code"),
+			onError: () => toast.error(panelT("Failed to request pairing code")),
 		}),
 	);
 
@@ -620,23 +636,28 @@ function QrModal({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-2xl">
 				<DialogHeader>
-					<DialogTitle>Connect WhatsApp</DialogTitle>
+					<DialogTitle>{panelT("Connect WhatsApp")}</DialogTitle>
 					<DialogDescription>
-						Scan the QR code or request a pairing code with your country-code
-						phone number.
+						{panelT(
+							"Scan the QR code or request a pairing code with your country-code phone number.",
+						)}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="grid gap-4 md:grid-cols-[16rem_1fr]">
 					<div className="flex flex-col items-center gap-3">
 						{qrCode ? (
-							<img src={qrCode} alt="WhatsApp QR Code" className="size-64" />
+							<img
+								src={qrCode}
+								alt={panelT("WhatsApp QR Code")}
+								className="size-64"
+							/>
 						) : (
 							<Skeleton className="size-64" />
 						)}
 						<DeviceStatusBadge status={status} />
 					</div>
 					<div className="flex flex-col gap-2">
-						<p className="font-medium text-xs">Pairing code</p>
+						<p className="font-medium text-xs">{panelT("Pairing code")}</p>
 						<Input
 							placeholder="6281234567890"
 							value={phoneNumber}
@@ -656,7 +677,9 @@ function QrModal({
 								})
 							}
 						>
-							{pairingCodeMut.isPending ? "Requesting..." : "Get code"}
+							{pairingCodeMut.isPending
+								? panelT("Requesting...")
+								: panelT("Get code")}
 						</Button>
 						{pairingCode && (
 							<div className="border bg-muted px-3 py-2 text-center font-mono text-lg tracking-widest">
@@ -664,8 +687,9 @@ function QrModal({
 							</div>
 						)}
 						<p className="text-[10px] text-muted-foreground">
-							Use WhatsApp Linked Devices, choose link with phone number, then
-							enter this code.
+							{panelT(
+								"Use WhatsApp Linked Devices, choose link with phone number, then enter this code.",
+							)}
 						</p>
 					</div>
 				</div>
@@ -675,6 +699,8 @@ function QrModal({
 }
 
 function DevicesPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const { data: devices, refetch } = useSuspenseQuery(
@@ -690,7 +716,7 @@ function DevicesPage() {
 		trpc.device.connect.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Connecting...");
+				toast.success(panelT("Connecting..."));
 			},
 		}),
 	);
@@ -699,7 +725,7 @@ function DevicesPage() {
 		trpc.device.disconnect.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Disconnected");
+				toast.success(panelT("Disconnected"));
 			},
 		}),
 	);
@@ -708,7 +734,7 @@ function DevicesPage() {
 		trpc.device.logout.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Session reset");
+				toast.success(panelT("Session reset"));
 			},
 		}),
 	);
@@ -717,14 +743,14 @@ function DevicesPage() {
 		trpc.device.delete.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Device deleted");
+				toast.success(panelT("Device deleted"));
 			},
 		}),
 	);
 	const syncAllMut = useMutation(
 		trpc.device.startSync.mutationOptions({
-			onSuccess: () => toast.success("Resource sync queued"),
-			onError: (error) => toast.error(error.message),
+			onSuccess: () => toast.success(panelT("Resource sync queued")),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
@@ -737,7 +763,7 @@ function DevicesPage() {
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<p className="text-muted-foreground text-sm">
-					Manage your WhatsApp devices
+					{panelT("Manage your WhatsApp devices")}
 				</p>
 				<AddDeviceDialog onAdded={() => refetch()} />
 			</div>
@@ -747,7 +773,9 @@ function DevicesPage() {
 					{devices.length === 0 ? (
 						<div className="flex flex-col items-center gap-3 py-12">
 							<Smartphone className="size-10 text-muted-foreground/50" />
-							<p className="text-muted-foreground text-sm">No devices yet</p>
+							<p className="text-muted-foreground text-sm">
+								{panelT("No devices yet")}
+							</p>
 							<AddDeviceDialog onAdded={() => refetch()} />
 						</div>
 					) : (
@@ -757,24 +785,24 @@ function DevicesPage() {
 							columns={[
 								{
 									key: "name",
-									header: "Name",
+									header: panelT("Name"),
 									className: "font-medium",
 									cell: (d) => d.name,
 								},
 								{
 									key: "provider",
-									header: "Provider",
+									header: panelT("Provider"),
 									cell: (d) => <ProviderBadge provider={d.provider} />,
 								},
 								{
 									key: "phone",
-									header: "Phone",
+									header: panelT("Phone"),
 									className: "text-muted-foreground",
 									cell: (d) => d.displayPhoneNumber ?? d.phoneNumber ?? "—",
 								},
 								{
 									key: "status",
-									header: "Status",
+									header: panelT("Status"),
 									cell: (d) => {
 										const warnings = getMetaWarnings(d);
 										return (
@@ -795,7 +823,7 @@ function DevicesPage() {
 								},
 								{
 									key: "added",
-									header: "Added",
+									header: panelT("Added"),
 									className: "text-muted-foreground",
 									cell: (d) => new Date(d.createdAt).toLocaleDateString(),
 								},
@@ -826,7 +854,7 @@ function DevicesPage() {
 															}
 														>
 															<RefreshCw className="size-3.5" />
-															Sync All
+															{panelT("Sync All")}
 														</DropdownMenuItem>
 													)}
 												{d.status === "disconnected" && (
@@ -839,8 +867,8 @@ function DevicesPage() {
 															<Power className="size-3.5" />
 														)}
 														{d.provider === "meta_cloud"
-															? "Validate"
-															: "Connect"}
+															? panelT("Validate")
+															: panelT("Connect")}
 													</DropdownMenuItem>
 												)}
 												{d.status !== "disconnected" && (
@@ -853,7 +881,7 @@ function DevicesPage() {
 														}
 													>
 														<PowerOff className="size-3.5" />
-														Disconnect
+														{panelT("Disconnect")}
 													</DropdownMenuItem>
 												)}
 												{d.status === "connecting" &&
@@ -862,7 +890,7 @@ function DevicesPage() {
 															onClick={() => setQrDeviceId(d.id)}
 														>
 															<QrCode className="size-3.5" />
-															Show QR
+															{panelT("Show QR")}
 														</DropdownMenuItem>
 													)}
 												{d.provider === "meta_cloud" && (
@@ -870,7 +898,7 @@ function DevicesPage() {
 														onClick={() => setEditingMetaDeviceId(d.id)}
 													>
 														<Settings className="size-3.5" />
-														Configure
+														{panelT("Configure")}
 													</DropdownMenuItem>
 												)}
 												<DropdownMenuItem
@@ -884,8 +912,8 @@ function DevicesPage() {
 												>
 													<LogOut className="size-3.5" />
 													{d.provider === "meta_cloud"
-														? "Remove credentials"
-														: "Reset session"}
+														? panelT("Remove credentials")
+														: panelT("Reset session")}
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													variant="destructive"
@@ -897,7 +925,7 @@ function DevicesPage() {
 													}
 												>
 													<Trash2 className="size-3.5" />
-													Delete
+													{panelT("Delete")}
 												</DropdownMenuItem>
 											</DropdownMenuContent>
 										</DropdownMenu>

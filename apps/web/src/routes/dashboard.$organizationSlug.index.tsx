@@ -20,6 +20,7 @@ import {
 	Smartphone,
 } from "lucide-react";
 import { useActiveOrganization } from "@/components/active-organization";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/")({
@@ -48,6 +49,8 @@ const sections = [
 ] as const;
 
 function DashboardOverview() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const { data } = useSuspenseQuery(trpc.healthCheck.queryOptions());
@@ -55,9 +58,11 @@ function DashboardOverview() {
 	return (
 		<div className="space-y-6">
 			<div className="space-y-1">
-				<h2 className="font-semibold text-2xl tracking-tight">Overview</h2>
+				<h2 className="font-semibold text-2xl tracking-tight">
+					{panelT("Overview")}
+				</h2>
 				<p className="text-muted-foreground text-sm">
-					Manage your WhatsApp automation workspace.
+					{panelT("Manage your WhatsApp automation workspace.")}
 				</p>
 			</div>
 
@@ -74,8 +79,8 @@ function DashboardOverview() {
 								<div className="mb-2 flex size-9 items-center justify-center border bg-muted">
 									<Icon className="size-4 text-primary" />
 								</div>
-								<CardTitle>{title}</CardTitle>
-								<CardDescription>{description}</CardDescription>
+								<CardTitle>{panelT(title)}</CardTitle>
+								<CardDescription>{panelT(description)}</CardDescription>
 							</CardHeader>
 						</Card>
 					</Link>
@@ -87,15 +92,16 @@ function DashboardOverview() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2 text-base">
 							<Bot className="size-4 text-primary" />
-							Build WhatsApp automations visually
+							{panelT("Build WhatsApp automations visually")}
 						</CardTitle>
 						<CardDescription>
-							Connect a device, design the flow with nodes, then deploy it to
-							handle incoming messages.
+							{panelT(
+								"Connect a device, design the flow with nodes, then deploy it to handle incoming messages.",
+							)}
 						</CardDescription>
 						<CardAction>
 							<Badge variant="secondary" className="text-xs">
-								Ready
+								{panelT("Ready")}
 							</Badge>
 						</CardAction>
 					</CardHeader>
@@ -106,7 +112,7 @@ function DashboardOverview() {
 							className={cn(buttonVariants({ size: "sm" }))}
 						>
 							<Plus className="size-3.5" />
-							Create Flow
+							{panelT("Create Flow")}
 						</Link>
 						<Link
 							to="/dashboard/$organizationSlug/devices"
@@ -114,7 +120,7 @@ function DashboardOverview() {
 							className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
 						>
 							<Smartphone className="size-3.5" />
-							Connect Device
+							{panelT("Connect Device")}
 						</Link>
 					</CardContent>
 				</Card>
@@ -123,9 +129,11 @@ function DashboardOverview() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2 text-base">
 							<Activity className="size-4 text-primary" />
-							Server status
+							{panelT("Server status")}
 						</CardTitle>
-						<CardDescription>Current API health response.</CardDescription>
+						<CardDescription>
+							{panelT("Current API health response.")}
+						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-3">
 						<div className="border bg-muted/30 px-3 py-2">
@@ -136,7 +144,7 @@ function DashboardOverview() {
 							params={{ organizationSlug: organization.slug }}
 							className="inline-flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
 						>
-							View runtime logs
+							{panelT("View runtime logs")}
 							<ArrowRight className="size-3.5" />
 						</Link>
 					</CardContent>

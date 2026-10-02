@@ -30,6 +30,7 @@ import {
 import { useMemo, useState } from "react";
 import { useActiveOrganization } from "@/components/active-organization";
 import { useFlowLogSSE } from "@/hooks/use-flow-log-sse";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export type FlowLogRow = {
@@ -170,6 +171,8 @@ function LogDetailPanel({
 	logId: string;
 	flowNodes?: { id: string; type?: string; data?: Record<string, unknown> }[];
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const { data: log } = useSuspenseQuery(
@@ -204,7 +207,7 @@ function LogDetailPanel({
 	if (!log) {
 		return (
 			<div className="flex h-full items-center justify-center p-6 text-muted-foreground text-xs">
-				Log not found.
+				{panelT("Log not found.")}
 			</div>
 		);
 	}
@@ -212,7 +215,7 @@ function LogDetailPanel({
 	return (
 		<Card className="h-full rounded-none border-0 border-l bg-card/80 py-0 ring-0">
 			<CardHeader className="border-b px-4 py-4">
-				<CardTitle className="text-sm">Execution detail</CardTitle>
+				<CardTitle className="text-sm">{panelT("Execution detail")}</CardTitle>
 				<p className="font-mono text-muted-foreground text-xs">
 					{log.contactNumber}
 				</p>
@@ -220,14 +223,16 @@ function LogDetailPanel({
 			<CardContent className="space-y-4 p-4">
 				<div className="space-y-2">
 					<div className="flex items-center justify-between rounded-lg border bg-background p-3">
-						<span className="text-muted-foreground text-xs">Status</span>
+						<span className="text-muted-foreground text-xs">
+							{panelT("Status")}
+						</span>
 						<Badge variant={statusVariants[log.status] ?? "secondary"}>
 							{log.status}
 						</Badge>
 					</div>
 					<div className="rounded-lg border bg-background p-3 text-xs">
 						<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-							Flow
+							{panelT("Flow")}
 						</p>
 						<Link
 							to="/dashboard/$organizationSlug/flows/$flowId"
@@ -242,7 +247,7 @@ function LogDetailPanel({
 					</div>
 					<div className="rounded-lg border bg-background p-3 text-xs">
 						<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-							Device
+							{panelT("Device")}
 						</p>
 						<p className="mt-1 flex items-center gap-1.5 font-medium">
 							<Smartphone className="size-3 text-muted-foreground" />
@@ -251,7 +256,7 @@ function LogDetailPanel({
 					</div>
 					<div className="rounded-lg border bg-background p-3 text-xs">
 						<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-							Trigger
+							{panelT("Trigger")}
 						</p>
 						<p className="mt-1 font-medium">{log.triggerSource}</p>
 					</div>
@@ -260,16 +265,18 @@ function LogDetailPanel({
 				{log.sessionId && (
 					<div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-xs">
 						<p className="font-medium text-yellow-700 dark:text-yellow-400">
-							Session · {log.sessionStatus}
+							{panelT("Session ·")} {log.sessionStatus}
 						</p>
 						{log.waitingNodeId && (
 							<p className="mt-1 text-muted-foreground">
-								Waiting at: {resolveNodeLabel(log.waitingNodeId, nodes)}
+								{panelT("Waiting at:")}{" "}
+								{resolveNodeLabel(log.waitingNodeId, nodes)}
 							</p>
 						)}
 						{log.sessionExpiresAt && (
 							<p className="mt-1 text-muted-foreground">
-								Expires: {new Date(log.sessionExpiresAt).toLocaleString()}
+								{panelT("Expires:")}{" "}
+								{new Date(log.sessionExpiresAt).toLocaleString()}
 							</p>
 						)}
 						<Link
@@ -283,7 +290,7 @@ function LogDetailPanel({
 								"mt-2 h-7 w-full text-xs",
 							)}
 						>
-							View sessions
+							{panelT("View sessions")}
 						</Link>
 					</div>
 				)}
@@ -296,7 +303,9 @@ function LogDetailPanel({
 
 				{events.length > 0 && (
 					<div>
-						<p className="mb-2 font-medium text-xs">Execution timeline</p>
+						<p className="mb-2 font-medium text-xs">
+							{panelT("Execution timeline")}
+						</p>
 						<div className="space-y-1.5">
 							{events.map((event) => {
 								const payload = normalizePayload(event.payload);
@@ -329,7 +338,7 @@ function LogDetailPanel({
 										)}
 										{maskedPreview && (
 											<p className="mt-1 font-mono text-muted-foreground">
-												Reply: {maskedPreview}
+												{panelT("Reply:")} {maskedPreview}
 											</p>
 										)}
 									</div>
@@ -341,7 +350,9 @@ function LogDetailPanel({
 
 				{nodeResults.length > 0 && (
 					<div>
-						<p className="mb-2 font-medium text-xs">Node progress</p>
+						<p className="mb-2 font-medium text-xs">
+							{panelT("Node progress")}
+						</p>
 						<div className="space-y-1.5">
 							{nodeResults.map((result, index) => (
 								<div
@@ -358,7 +369,7 @@ function LogDetailPanel({
 											}
 											className="h-4 px-1.5 text-[9px]"
 										>
-											{result.status}
+											{panelT(result.status)}
 										</Badge>
 									</div>
 									<p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
@@ -390,7 +401,7 @@ function LogDetailPanel({
 							)}
 						>
 							<Inbox className="size-3.5" />
-							Open conversation
+							{panelT("Open conversation")}
 						</Link>
 					)}
 					{log.contactId && (
@@ -404,7 +415,7 @@ function LogDetailPanel({
 							)}
 						>
 							<User className="size-3.5" />
-							View contact
+							{panelT("View contact")}
 						</Link>
 					)}
 					<Link
@@ -416,7 +427,7 @@ function LogDetailPanel({
 						)}
 					>
 						<MessageSquare className="size-3.5" />
-						Open flow
+						{panelT("Open flow")}
 					</Link>
 				</div>
 			</CardContent>
@@ -437,6 +448,8 @@ export function FlowLogsView({
 	limit?: number;
 	flowNodes?: { id: string; type?: string; data?: Record<string, unknown> }[];
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const { data: logs } = useSuspenseQuery(
@@ -472,9 +485,13 @@ export function FlowLogsView({
 							<div className="flex flex-col items-center gap-3 py-16">
 								<Clock className="size-10 text-muted-foreground/50" />
 								<div className="space-y-1 text-center">
-									<p className="font-medium text-sm">No execution logs yet</p>
+									<p className="font-medium text-sm">
+										{panelT("No execution logs yet")}
+									</p>
 									<p className="text-muted-foreground text-xs">
-										Logs appear when a flow processes a WhatsApp message.
+										{panelT(
+											"Logs appear when a flow processes a WhatsApp message.",
+										)}
 									</p>
 								</div>
 							</div>
@@ -482,13 +499,13 @@ export function FlowLogsView({
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Status</TableHead>
-										{!flowId && <TableHead>Flow</TableHead>}
-										<TableHead>Contact</TableHead>
-										<TableHead>Trigger</TableHead>
-										<TableHead>Progress</TableHead>
-										<TableHead>Started</TableHead>
-										<TableHead>Duration</TableHead>
+										<TableHead>{panelT("Status")}</TableHead>
+										{!flowId && <TableHead>{panelT("Flow")}</TableHead>}
+										<TableHead>{panelT("Contact")}</TableHead>
+										<TableHead>{panelT("Trigger")}</TableHead>
+										<TableHead>{panelT("Progress")}</TableHead>
+										<TableHead>{panelT("Started")}</TableHead>
+										<TableHead>{panelT("Duration")}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -552,7 +569,7 @@ export function FlowLogsView({
 															variant="outline"
 															className="ml-1.5 h-4 px-1 text-[9px]"
 														>
-															session
+															{panelT("session")}
 														</Badge>
 													)}
 												</TableCell>
@@ -576,8 +593,9 @@ export function FlowLogsView({
 						<LogDetailPanel logId={selectedLog.id} flowNodes={flowNodes} />
 					) : (
 						<div className="flex h-full items-center justify-center p-6 text-center text-muted-foreground text-xs">
-							Select a log to see node progress, active session, and links to
-							contact or inbox.
+							{panelT(
+								"Select a log to see node progress, active session, and links to contact or inbox.",
+							)}
 						</div>
 					)}
 				</div>

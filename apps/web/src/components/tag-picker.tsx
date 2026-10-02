@@ -10,6 +10,7 @@ import {
 import { Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 type Tag = { id: string; name: string };
@@ -39,6 +40,8 @@ export function TagPicker({
 	resource: "contact" | "group";
 	onSaved: () => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const [open, setOpen] = useState(false);
 	const [newName, setNewName] = useState("");
@@ -56,7 +59,7 @@ export function TagPicker({
 				setNewName("");
 				refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const serverSelectedIds = tags.map((tag) => tag.id);
@@ -86,7 +89,7 @@ export function TagPicker({
 				onSuccess: () => onSaved(),
 				onError: (error: Error) => {
 					setSelectedIds(serverSelectedIds);
-					toast.error(error.message);
+					toast.error(panelT(error.message));
 				},
 			},
 		);
@@ -100,7 +103,7 @@ export function TagPicker({
 						variant="ghost"
 						size="icon-xs"
 						className="size-6"
-						aria-label="Manage tags"
+						aria-label={panelT("Manage tags")}
 					/>
 				}
 			>
@@ -110,7 +113,7 @@ export function TagPicker({
 				<div className="mb-2 flex gap-1">
 					<Input
 						className="h-7 text-xs"
-						placeholder="New tag"
+						placeholder={panelT("New tag")}
 						value={newName}
 						onChange={(event) => setNewName(event.target.value)}
 						onKeyDown={(event) => {
@@ -125,7 +128,7 @@ export function TagPicker({
 						disabled={!newName.trim() || createTag.isPending}
 						onClick={() => createTag.mutate({ name: newName.trim() })}
 					>
-						Add
+						{panelT("Add")}
 					</Button>
 				</div>
 				<div className="flex max-h-48 flex-col overflow-y-auto">

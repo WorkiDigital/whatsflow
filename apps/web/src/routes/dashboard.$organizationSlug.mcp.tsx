@@ -13,7 +13,10 @@ import { Label } from "@whatsapp-flow/ui/components/label";
 import { Copy, Eye, EyeOff, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useI18n } from "@/i18n/provider";
+import {
+	useI18n,
+	useTranslation as usePanelTranslation,
+} from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/mcp")({
@@ -100,6 +103,8 @@ const labels = {
 };
 
 function McpPage() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const { locale } = useI18n();
 	const text = labels[locale];
@@ -153,7 +158,7 @@ function McpPage() {
 			</div>
 			<Card>
 				<CardHeader>
-					<CardTitle>MCP</CardTitle>
+					<CardTitle>{panelT("MCP")}</CardTitle>
 					<CardDescription>
 						{connection.data
 							? connection.data.enabled

@@ -17,6 +17,7 @@ import { Textarea } from "@whatsapp-flow/ui/components/textarea";
 import { ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 import { useTRPC } from "@/utils/trpc";
 
@@ -34,6 +35,8 @@ type RoleRow = {
 };
 
 function RolesPage() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const rolesQuery = useQuery(trpc.rbac.listRoles.queryOptions());
 	const permissionsQuery = useQuery(trpc.rbac.listPermissions.queryOptions());
@@ -75,17 +78,17 @@ function RolesPage() {
 	const createRole = useMutation(
 		trpc.rbac.createRole.mutationOptions({
 			onSuccess: () => {
-				toast.success("Role created");
+				toast.success(panelT("Role created"));
 				setNewRole({ key: "", name: "", description: "" });
 				rolesQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const setPermissions = useMutation(
 		trpc.rbac.setRolePermissions.mutationOptions({
 			onSuccess: (_result, variables) => {
-				toast.success("Role permissions updated");
+				toast.success(panelT("Role permissions updated"));
 				void rolesQuery.refetch().then(() => {
 					setPermissionOverrides((current) => {
 						const next = { ...current };
@@ -100,7 +103,7 @@ function RolesPage() {
 					delete next[variables.roleId];
 					return next;
 				});
-				toast.error(error.message);
+				toast.error(panelT(error.message));
 			},
 		}),
 	);
@@ -124,7 +127,7 @@ function RolesPage() {
 	if (rolesQuery.error || permissionsQuery.error) {
 		return (
 			<div className="space-y-2">
-				<h2 className="font-semibold text-xl">Roles unavailable</h2>
+				<h2 className="font-semibold text-xl">{panelT("Roles unavailable")}</h2>
 				<p className="text-muted-foreground text-sm">
 					{rolesQuery.error?.message ?? permissionsQuery.error?.message}
 				</p>
@@ -137,11 +140,12 @@ function RolesPage() {
 			<div className="space-y-1">
 				<h2 className="flex items-center gap-2 font-semibold text-2xl tracking-tight">
 					<ShieldCheck className="size-6 text-primary" />
-					Roles & Permissions
+					{panelT("Roles & Permissions")}
 				</h2>
 				<p className="text-muted-foreground text-sm">
-					Create roles and assign granular permissions for enterprise access
-					control.
+					{panelT(
+						"Create roles and assign granular permissions for enterprise access control.",
+					)}
 				</p>
 			</div>
 
@@ -149,17 +153,17 @@ function RolesPage() {
 				<div className="space-y-4">
 					<Card>
 						<CardHeader>
-							<CardTitle>Create role</CardTitle>
+							<CardTitle>{panelT("Create role")}</CardTitle>
 							<CardDescription>
-								Custom roles can combine any permission set.
+								{panelT("Custom roles can combine any permission set.")}
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-3">
 							<div className="space-y-1">
-								<Label htmlFor="role-key">Key</Label>
+								<Label htmlFor="role-key">{panelT("Key")}</Label>
 								<Input
 									id="role-key"
-									placeholder="support_lead"
+									placeholder={panelT("support_lead")}
 									value={newRole.key}
 									onChange={(event) =>
 										setNewRole((current) => ({
@@ -170,10 +174,10 @@ function RolesPage() {
 								/>
 							</div>
 							<div className="space-y-1">
-								<Label htmlFor="role-name">Name</Label>
+								<Label htmlFor="role-name">{panelT("Name")}</Label>
 								<Input
 									id="role-name"
-									placeholder="Support lead"
+									placeholder={panelT("Support lead")}
 									value={newRole.name}
 									onChange={(event) =>
 										setNewRole((current) => ({
@@ -184,7 +188,9 @@ function RolesPage() {
 								/>
 							</div>
 							<div className="space-y-1">
-								<Label htmlFor="role-description">Description</Label>
+								<Label htmlFor="role-description">
+									{panelT("Description")}
+								</Label>
 								<Textarea
 									id="role-description"
 									value={newRole.description}
@@ -201,14 +207,14 @@ function RolesPage() {
 								disabled={createRole.isPending || !newRole.key || !newRole.name}
 								onClick={() => createRole.mutate(newRole)}
 							>
-								Create role
+								{panelT("Create role")}
 							</Button>
 						</CardContent>
 					</Card>
 
 					<Card>
 						<CardHeader>
-							<CardTitle>Roles</CardTitle>
+							<CardTitle>{panelT("Roles")}</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-2">
 							{roles.map((role) => (
@@ -220,7 +226,9 @@ function RolesPage() {
 								>
 									<div className="flex items-center justify-between gap-2">
 										<p className="font-medium text-sm">{role.name}</p>
-										{role.isSystem && <Badge variant="secondary">System</Badge>}
+										{role.isSystem && (
+											<Badge variant="secondary">{panelT("System")}</Badge>
+										)}
 									</div>
 									<p className="text-muted-foreground text-xs">{role.key}</p>
 								</button>
@@ -231,12 +239,16 @@ function RolesPage() {
 
 				<Card>
 					<CardHeader>
-						<CardTitle>{selectedRole?.name ?? "Select a role"}</CardTitle>
+						<CardTitle>
+							{selectedRole?.name ?? panelT("Select a role")}
+						</CardTitle>
 						<CardDescription>
 							{selectedRole?.isSystem
-								? "System role permissions are managed by the application and cannot be changed here. Create a custom role for editable permissions."
+								? panelT(
+										"System role permissions are managed by the application and cannot be changed here. Create a custom role for editable permissions.",
+									)
 								: (selectedRole?.description ??
-									"Choose a role to edit its permissions.")}
+									panelT("Choose a role to edit its permissions."))}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -252,7 +264,9 @@ function RolesPage() {
 													className={`flex items-start gap-3 rounded-lg border p-3 ${selectedRole?.isSystem ? "bg-muted/30 opacity-60" : ""}`}
 												>
 													<Checkbox
-														aria-label={`Toggle ${permission.key}`}
+														aria-label={panelT("Toggle {v0}", {
+															v0: permission.key,
+														})}
 														checked={selectedPermissionSet.has(permission.key)}
 														disabled={
 															!selectedRole ||

@@ -5,10 +5,10 @@ import {
 	SidebarTrigger,
 } from "@whatsapp-flow/ui/components/sidebar";
 import { cn } from "@whatsapp-flow/ui/lib/utils";
-
 import { ActiveOrganizationProvider } from "@/components/active-organization";
 import { DashboardSidebar } from "@/components/sidebar";
 import UserMenu from "@/components/user-menu";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug")({
 	loader: async ({ context, params }) => {
@@ -31,6 +31,8 @@ export const Route = createFileRoute("/dashboard/$organizationSlug")({
 });
 
 function OrganizationDashboardLayout() {
+	const panelT = usePanelTranslation();
+
 	const location = useLocation();
 	const { organization } = Route.useLoaderData();
 	const dashboardPath = `/dashboard/${organization.slug}`;
@@ -57,7 +59,7 @@ function OrganizationDashboardLayout() {
 								{organization.name}
 							</h1>
 							<p className="hidden text-muted-foreground text-xs sm:block">
-								Manage devices, flows, inbox, and automation logs.
+								{panelT("Manage devices, flows, inbox, and automation logs.")}
 							</p>
 						</div>
 						<UserMenu />

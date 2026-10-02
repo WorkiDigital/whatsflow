@@ -36,6 +36,9 @@ Object.defineProperty(globalThis, "cancelAnimationFrame", {
 	configurable: true,
 	writable: true,
 });
+const { dashboardTranslations } = await import(
+	"../i18n/dashboard-translations"
+);
 const { render, fireEvent, cleanup } = await import("@testing-library/react");
 const {
 	DropdownMenu,
@@ -88,4 +91,110 @@ test("clicking a language updates translations and persists the choice", () => {
 		</I18nProvider>,
 	);
 	expect(restored.getByTestId("translation").textContent).toBe("Idioma");
+});
+
+// JSDOM does not implement blob worker URLs; the map itself is not mounted here.
+Object.defineProperty(dom.window.URL, "createObjectURL", {
+	value: () => "blob:test-worker",
+	configurable: true,
+});
+const { NodeConfigPanel } = await import("./node-config-panel");
+const { DataTable } = await import("./data-table");
+const { paletteCategories, createNode, SendTextNode } = await import(
+	"./flow-nodes"
+);
+const { ReactFlowProvider } = await import("@xyflow/react");
+
+function DashboardExample() {
+	const { t } = useI18n();
+	const node = createNode("send-text");
+	return (
+		<>
+			<Example />
+			<DataTable
+				columns={[
+					{ key: "name", header: t("Name"), cell: () => "Sales workspace" },
+				]}
+				data={[{ id: "1" }]}
+				getRowKey={(row) => row.id}
+			/>
+			<NodeConfigPanel
+				node={node}
+				flowId="test"
+				canRotateWebhookToken={false}
+				onUpdate={() => {}}
+				onDelete={() => {}}
+			/>
+			<p>{t("No flows yet")}</p>
+		</>
+	);
+}
+
+test("language selection updates table headers, editor fields and empty states without changing customer data", () => {
+	const view = render(
+		<I18nProvider initialLocale="en">
+			<DashboardExample />
+		</I18nProvider>,
+	);
+	expect(view.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+	fireEvent.click(view.getByRole("menuitem", { name: "Português" }));
+	expect(view.getByRole("columnheader", { name: "Nome" })).toBeTruthy();
+	expect(view.getByText("Mensagem de texto")).toBeTruthy();
+	expect(view.getByText("Nenhum fluxo ainda")).toBeTruthy();
+	expect(view.getByText("Sales workspace")).toBeTruthy();
+	fireEvent.click(view.getByRole("menuitem", { name: "Español" }));
+	expect(view.getByRole("columnheader", { name: "Nombre" })).toBeTruthy();
+	expect(view.getByText("Mensaje de texto")).toBeTruthy();
+	expect(view.getByText("Todavía no hay flujos")).toBeTruthy();
+	fireEvent.click(view.getByRole("menuitem", { name: "English" }));
+	expect(view.getByRole("columnheader", { name: "Name" })).toBeTruthy();
+	expect(view.getByText("No flows yet")).toBeTruthy();
+});
+
+test("every flow palette label translates and default labels leave saved/custom nodes intact", () => {
+	for (const category of paletteCategories) {
+		for (const text of [
+			category.label,
+			...category.items.map((item) => item.label),
+		]) {
+			for (const locale of ["pt", "es"] as const)
+				expect(Object.hasOwn(dashboardTranslations[locale], text)).toBe(true);
+		}
+	}
+	const node = createNode("send-text");
+	const original = JSON.stringify(node);
+	const props = {
+		id: node.id,
+		type: "send-text",
+		data: node.data,
+		selected: false,
+		dragging: false,
+		draggable: true,
+		selectable: true,
+		deletable: true,
+		isConnectable: true,
+		positionAbsoluteX: 0,
+		positionAbsoluteY: 0,
+		zIndex: 0,
+	};
+	const view = render(
+		<I18nProvider initialLocale="pt">
+			<ReactFlowProvider>
+				<SendTextNode {...props} />
+			</ReactFlowProvider>
+		</I18nProvider>,
+	);
+	expect(view.getByText("Enviar texto")).toBeTruthy();
+	expect(JSON.stringify(node)).toBe(original);
+	view.rerender(
+		<I18nProvider initialLocale="pt">
+			<ReactFlowProvider>
+				<SendTextNode
+					{...props}
+					data={{ ...node.data, label: "Sales workspace" }}
+				/>
+			</ReactFlowProvider>
+		</I18nProvider>,
+	);
+	expect(view.getByText("Sales workspace")).toBeTruthy();
 });

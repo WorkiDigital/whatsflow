@@ -18,6 +18,7 @@ import {
 	ResourceSyncControls,
 	useResourceSyncCompletion,
 } from "@/components/resource-sync-controls";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute(
@@ -27,6 +28,8 @@ export const Route = createFileRoute(
 });
 
 function NewslettersPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const trackSyncCompletion = useResourceSyncCompletion("newsletters");
@@ -42,16 +45,16 @@ function NewslettersPage() {
 		trpc.channel.syncOne.mutationOptions({
 			onSuccess: (result) => {
 				trackSyncCompletion(result);
-				toast.success("Newsletter sync queued");
+				toast.success(panelT("Newsletter sync queued"));
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
 	const columns = [
 		{
 			key: "name",
-			header: "Newsletter Name",
+			header: panelT("Newsletter Name"),
 			cell: (row: (typeof newsletters)[0]) => (
 				<div className="flex flex-col">
 					<span className="font-medium text-xs">{row.name}</span>
@@ -65,14 +68,14 @@ function NewslettersPage() {
 		},
 		{
 			key: "subscribers",
-			header: "Subscribers",
+			header: panelT("Subscribers"),
 			cell: (row: (typeof newsletters)[0]) => (
 				<span className="text-xs">{row.subscribersCount}</span>
 			),
 		},
 		{
 			key: "jid",
-			header: "JID",
+			header: panelT("JID"),
 			cell: (row: (typeof newsletters)[0]) => (
 				<span className="font-mono text-[10px] text-muted-foreground">
 					{row.jid}
@@ -81,22 +84,22 @@ function NewslettersPage() {
 		},
 		{
 			key: "verification",
-			header: "Verification",
+			header: panelT("Verification"),
 			cell: (row: (typeof newsletters)[0]) => (
 				<Badge variant="outline" className="h-4 px-1 text-[9px]">
-					{row.verificationStatus ?? "UNVERIFIED"}
+					{row.verificationStatus ?? panelT("UNVERIFIED")}
 				</Badge>
 			),
 		},
 		{
 			key: "isSubscribed",
-			header: "Subscribed",
+			header: panelT("Subscribed"),
 			cell: (row: (typeof newsletters)[0]) => (
 				<Badge
 					variant={row.isSubscribed ? "default" : "secondary"}
 					className="h-4 px-1 text-[9px]"
 				>
-					{row.isSubscribed ? "✓" : "Left"}
+					{row.isSubscribed ? "✓" : panelT("Left")}
 				</Badge>
 			),
 		},
@@ -122,7 +125,7 @@ function NewslettersPage() {
 								onClick={() => syncOneMut.mutate({ id: row.id })}
 							>
 								<RefreshCw className="size-3.5" />
-								Refresh from WhatsApp
+								{panelT("Refresh from WhatsApp")}
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -135,9 +138,10 @@ function NewslettersPage() {
 		<div className="flex flex-col gap-4 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				<div>
-					<h1 className="font-semibold text-base">Newsletters</h1>
+					<h1 className="font-semibold text-base">{panelT("Newsletters")}</h1>
 					<p className="text-muted-foreground text-xs">
-						{newsletters.length} newsletters · synced from your WhatsApp devices
+						{newsletters.length}{" "}
+						{panelT("newsletters · synced from your WhatsApp devices")}
 					</p>
 				</div>
 				<ResourceSyncControls devices={devices} resource="newsletters" />
@@ -147,7 +151,7 @@ function NewslettersPage() {
 				<Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
 				<Input
 					className="h-8 pl-8 text-xs"
-					placeholder="Search newsletters..."
+					placeholder={panelT("Search newsletters...")}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 				/>
@@ -158,8 +162,8 @@ function NewslettersPage() {
 					<Megaphone className="size-8 opacity-30" />
 					<p className="text-xs">
 						{search
-							? "No newsletters found"
-							: "No newsletters yet — connect a device to sync"}
+							? panelT("No newsletters found")
+							: panelT("No newsletters yet — connect a device to sync")}
 					</p>
 				</div>
 			) : (

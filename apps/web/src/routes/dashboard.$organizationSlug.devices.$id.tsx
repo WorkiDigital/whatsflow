@@ -38,6 +38,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useActiveOrganization } from "@/components/active-organization";
 import { MetaDeviceConfigDialog } from "@/components/meta-device-config-dialog";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute(
@@ -64,6 +65,7 @@ const statusVariants: Record<
 };
 
 function DeviceStatusBadge({ status }: { status: string }) {
+	const panelT = usePanelTranslation();
 	return (
 		<Badge variant={statusVariants[status] ?? "secondary"}>
 			<span
@@ -72,21 +74,23 @@ function DeviceStatusBadge({ status }: { status: string }) {
 					statusColors[status] ?? "bg-gray-400",
 				)}
 			/>
-			{status}
+			{panelT(status)}
 		</Badge>
 	);
 }
 
 function ProviderBadge({ provider }: { provider?: string }) {
+	const panelT = usePanelTranslation();
+
 	return provider === "meta_cloud" ? (
 		<Badge variant="secondary" className="gap-1 text-xs">
 			<Cloud className="size-3" />
-			Meta Cloud
+			{panelT("Meta Cloud")}
 		</Badge>
 	) : (
 		<Badge variant="outline" className="gap-1 text-xs">
 			<Smartphone className="size-3" />
-			Baileys
+			{panelT("Baileys")}
 		</Badge>
 	);
 }
@@ -112,13 +116,14 @@ function getMetaWarnings(device: {
 const activeSyncStatuses = new Set(["queued", "running"]);
 
 function SyncStatusBadge({ status }: { status: string }) {
+	const panelT = usePanelTranslation();
 	const variant =
 		status === "succeeded"
 			? "default"
 			: status === "failed"
 				? "destructive"
 				: "secondary";
-	return <Badge variant={variant}>{status}</Badge>;
+	return <Badge variant={variant}>{panelT(status)}</Badge>;
 }
 
 function syncRunSummary(status: string) {
@@ -141,6 +146,8 @@ function syncRunSummary(status: string) {
 }
 
 function ResourceSyncCard({ deviceId }: { deviceId: string }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const syncStatus = useQuery({
@@ -157,10 +164,10 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 	const startSync = useMutation(
 		trpc.device.startSync.mutationOptions({
 			onSuccess: () => {
-				toast.success("Resource sync queued");
+				toast.success(panelT("Resource sync queued"));
 				syncStatus.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const queueSync = (
@@ -177,11 +184,13 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-sm">Resource synchronization</CardTitle>
+				<CardTitle className="text-sm">
+					{panelT("Resource synchronization")}
+				</CardTitle>
 				<p className="text-muted-foreground text-xs">
-					Queue a durable sync for resources already available to this linked
-					device. Discovery is not authoritative for every contact or
-					newsletter.
+					{panelT(
+						"Queue a durable sync for resources already available to this linked device. Discovery is not authoritative for every contact or newsletter.",
+					)}
 				</p>
 			</CardHeader>
 			<CardContent className="space-y-4">
@@ -192,7 +201,7 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 						onClick={() => queueSync("all")}
 					>
 						<RefreshCw className="size-3.5" />
-						Sync All
+						{panelT("Sync All")}
 					</Button>
 					<Button
 						size="sm"
@@ -200,7 +209,7 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 						disabled={startSync.isPending}
 						onClick={() => queueSync("contacts")}
 					>
-						Contacts
+						{panelT("Contacts")}
 					</Button>
 					<Button
 						size="sm"
@@ -208,7 +217,7 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 						disabled={startSync.isPending}
 						onClick={() => queueSync("groups")}
 					>
-						Groups
+						{panelT("Groups")}
 					</Button>
 					<Button
 						size="sm"
@@ -216,7 +225,7 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 						disabled={startSync.isPending}
 						onClick={() => queueSync("newsletters")}
 					>
-						Newsletters
+						{panelT("Newsletters")}
 					</Button>
 				</div>
 
@@ -224,10 +233,12 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 					<div className="flex flex-wrap items-center justify-between gap-2">
 						<div>
 							<p className="font-medium text-amber-950 text-xs">
-								Repair Contacts
+								{panelT("Repair Contacts")}
 							</p>
 							<p className="mt-1 text-amber-900 text-xs">
-								Triggers an app-state resync before refreshing contacts.
+								{panelT(
+									"Triggers an app-state resync before refreshing contacts.",
+								)}
 							</p>
 						</div>
 						<Button
@@ -237,20 +248,24 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 							disabled={startSync.isPending}
 							onClick={() => queueSync("contacts", "repair")}
 						>
-							Repair Contacts
+							{panelT("Repair Contacts")}
 						</Button>
 					</div>
 				</div>
 
 				<div className="space-y-2">
 					<div className="flex items-center justify-between">
-						<p className="font-medium text-xs">Recent durable runs</p>
+						<p className="font-medium text-xs">
+							{panelT("Recent durable runs")}
+						</p>
 						{syncStatus.isFetching && (
 							<LoaderCircle className="size-3.5 animate-spin text-muted-foreground" />
 						)}
 					</div>
 					{syncStatus.data?.length === 0 && (
-						<p className="text-muted-foreground text-xs">No sync runs yet.</p>
+						<p className="text-muted-foreground text-xs">
+							{panelT("No sync runs yet.")}
+						</p>
 					)}
 					{syncStatus.data?.map((run) => {
 						return (
@@ -261,28 +276,30 @@ function ResourceSyncCard({ deviceId }: { deviceId: string }) {
 											<LoaderCircle className="size-3.5 animate-spin" />
 										)}
 										<p className="font-medium">
-											{run.resource} · {run.scopeKey === "all" ? "all" : "one"}
-											{run.mode === "repair" ? " · repair" : ""}
+											{run.resource} ·{" "}
+											{run.scopeKey === "all" ? panelT("all") : panelT("one")}
+											{run.mode === "repair" ? panelT(" · repair") : ""}
 										</p>
 										<SyncStatusBadge status={run.status} />
 									</div>
 									<p className="text-muted-foreground">
-										{syncRunSummary(run.status)}
+										{panelT(syncRunSummary(run.status))}
 									</p>
 								</div>
 								<p className="mt-2 text-muted-foreground">
-									Processed {run.processedCount} · Created {run.createdCount} ·
-									Updated {run.updatedCount} · Skipped {run.skippedCount} ·
-									Failed {run.failedCount}
+									{panelT("Processed")} {run.processedCount}{" "}
+									{panelT("· Created")} {run.createdCount} {panelT("· Updated")}{" "}
+									{run.updatedCount} {panelT("· Skipped")} {run.skippedCount}{" "}
+									{panelT("· Failed")} {run.failedCount}
 								</p>
 								<p className="mt-1 text-muted-foreground">
-									Queued {formatDate(run.createdAt)} · Started{" "}
-									{formatDate(run.startedAt)} · Finished{" "}
-									{formatDate(run.completedAt)}
+									{panelT("Queued")} {formatDate(run.createdAt)}{" "}
+									{panelT("· Started")} {formatDate(run.startedAt)}{" "}
+									{panelT("· Finished")} {formatDate(run.completedAt)}
 								</p>
 								{run.lastError && (
 									<p className="mt-1 text-destructive">
-										Last error: {run.lastError}
+										{panelT("Last error:")} {run.lastError}
 									</p>
 								)}
 							</div>
@@ -303,6 +320,8 @@ function DeviceDeploymentAccessCard({
 	tenantId: string;
 	ownerUserId: string;
 }) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const members = useQuery(trpc.tenant.listMembers.queryOptions({ tenantId }));
 	const grants = useQuery(
@@ -311,7 +330,7 @@ function DeviceDeploymentAccessCard({
 	const grantAccess = useMutation(
 		trpc.tenant.grantDeviceAccess.mutationOptions({
 			onSuccess: () => {
-				toast.success("Deployment access granted");
+				toast.success(panelT("Deployment access granted"));
 				grants.refetch();
 			},
 			onError: (error) =>
@@ -321,7 +340,7 @@ function DeviceDeploymentAccessCard({
 	const revokeAccess = useMutation(
 		trpc.tenant.revokeDeviceAccess.mutationOptions({
 			onSuccess: () => {
-				toast.success("Deployment access revoked");
+				toast.success(panelT("Deployment access revoked"));
 				grants.refetch();
 			},
 			onError: (error) => {
@@ -344,18 +363,21 @@ function DeviceDeploymentAccessCard({
 			<CardHeader>
 				<div className="flex items-center gap-2">
 					<ShieldCheck className="size-4" />
-					<CardTitle className="text-sm">Deployment access</CardTitle>
+					<CardTitle className="text-sm">
+						{panelT("Deployment access")}
+					</CardTitle>
 				</div>
 				<p className="text-muted-foreground text-xs">
-					Grant active tenant members permission to deploy flows to this
-					connection. They cannot view, configure, or manage this device.
+					{panelT(
+						"Grant active tenant members permission to deploy flows to this connection. They cannot view, configure, or manage this device.",
+					)}
 				</p>
 			</CardHeader>
 			<CardContent className="space-y-2">
 				{members.isLoading || grants.isLoading ? (
 					<div className="flex items-center gap-2 text-muted-foreground text-xs">
 						<LoaderCircle className="size-3.5 animate-spin" />
-						Loading members and deployment grants…
+						{panelT("Loading members and deployment grants…")}
 					</div>
 				) : eligibleMembers && eligibleMembers.length > 0 ? (
 					eligibleMembers.map((member) => {
@@ -371,7 +393,7 @@ function DeviceDeploymentAccessCard({
 									</p>
 									<p className="truncate text-muted-foreground text-xs">
 										{member.email}
-										{member.role === "owner" ? " · Tenant owner" : ""}
+										{member.role === "owner" ? panelT(" · Tenant owner") : ""}
 									</p>
 								</div>
 								{hasGrant ? (
@@ -390,7 +412,7 @@ function DeviceDeploymentAccessCard({
 										}
 									>
 										<UserMinus className="size-3.5" />
-										Revoke deploy
+										{panelT("Revoke deploy")}
 									</Button>
 								) : (
 									<Button
@@ -406,7 +428,7 @@ function DeviceDeploymentAccessCard({
 											})
 										}
 									>
-										Grant deploy
+										{panelT("Grant deploy")}
 									</Button>
 								)}
 							</div>
@@ -414,7 +436,9 @@ function DeviceDeploymentAccessCard({
 					})
 				) : (
 					<p className="text-muted-foreground text-xs">
-						No active tenant members are eligible for deployment access.
+						{panelT(
+							"No active tenant members are eligible for deployment access.",
+						)}
 					</p>
 				)}
 			</CardContent>
@@ -433,6 +457,8 @@ function QrModal({
 	onOpenChange: (v: boolean) => void;
 	onStatusChange?: () => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [qrCode, setQrCode] = useState<string | null>(null);
@@ -444,7 +470,7 @@ function QrModal({
 	const pairingCodeMut = useMutation(
 		trpc.device.requestPairingCode.mutationOptions({
 			onSuccess: ({ code }) => setPairingCode(code),
-			onError: () => toast.error("Failed to request pairing code"),
+			onError: () => toast.error(panelT("Failed to request pairing code")),
 		}),
 	);
 
@@ -478,23 +504,28 @@ function QrModal({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-2xl">
 				<DialogHeader>
-					<DialogTitle>Connect WhatsApp</DialogTitle>
+					<DialogTitle>{panelT("Connect WhatsApp")}</DialogTitle>
 					<DialogDescription>
-						Scan the QR code or request a pairing code with your country-code
-						phone number.
+						{panelT(
+							"Scan the QR code or request a pairing code with your country-code phone number.",
+						)}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="grid gap-4 md:grid-cols-[16rem_1fr]">
 					<div className="flex flex-col items-center gap-3">
 						{qrCode ? (
-							<img src={qrCode} alt="WhatsApp QR Code" className="size-64" />
+							<img
+								src={qrCode}
+								alt={panelT("WhatsApp QR Code")}
+								className="size-64"
+							/>
 						) : (
 							<Skeleton className="size-64" />
 						)}
 						<DeviceStatusBadge status={status} />
 					</div>
 					<div className="flex flex-col gap-2">
-						<p className="font-medium text-sm">Pairing code</p>
+						<p className="font-medium text-sm">{panelT("Pairing code")}</p>
 						<Input
 							placeholder="6281234567890"
 							value={phoneNumber}
@@ -513,7 +544,9 @@ function QrModal({
 								})
 							}
 						>
-							{pairingCodeMut.isPending ? "Requesting..." : "Get code"}
+							{pairingCodeMut.isPending
+								? panelT("Requesting...")
+								: panelT("Get code")}
 						</Button>
 						{pairingCode && (
 							<div className="rounded-md border bg-muted px-3 py-2 text-center font-mono text-lg tracking-widest">
@@ -521,8 +554,9 @@ function QrModal({
 							</div>
 						)}
 						<p className="text-muted-foreground text-xs">
-							Use WhatsApp Linked Devices, choose link with phone number, then
-							enter this code.
+							{panelT(
+								"Use WhatsApp Linked Devices, choose link with phone number, then enter this code.",
+							)}
 						</p>
 					</div>
 				</div>
@@ -532,6 +566,8 @@ function QrModal({
 }
 
 function DeviceDetailPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const { id } = Route.useParams();
 	const trpc = useTRPC();
@@ -547,7 +583,7 @@ function DeviceDetailPage() {
 		trpc.device.connect.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Connecting...");
+				toast.success(panelT("Connecting..."));
 			},
 		}),
 	);
@@ -556,7 +592,7 @@ function DeviceDetailPage() {
 		trpc.device.disconnect.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Disconnected");
+				toast.success(panelT("Disconnected"));
 			},
 		}),
 	);
@@ -565,7 +601,7 @@ function DeviceDetailPage() {
 		trpc.device.logout.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Logged out");
+				toast.success(panelT("Logged out"));
 			},
 		}),
 	);
@@ -574,13 +610,15 @@ function DeviceDetailPage() {
 		return (
 			<div className="flex flex-col items-center gap-3 py-12">
 				<Smartphone className="size-10 text-muted-foreground/50" />
-				<p className="text-muted-foreground text-sm">Device not found</p>
+				<p className="text-muted-foreground text-sm">
+					{panelT("Device not found")}
+				</p>
 				<Link
 					to="/dashboard/$organizationSlug/devices"
 					params={{ organizationSlug: organization.slug }}
 					className="text-primary text-xs hover:underline"
 				>
-					Back to devices
+					{panelT("Back to devices")}
 				</Link>
 			</div>
 		);
@@ -604,7 +642,7 @@ function DeviceDetailPage() {
 				)}
 			>
 				<ArrowLeft className="size-3.5" />
-				Devices
+				{panelT("Devices")}
 			</Link>
 
 			<div className="flex items-start justify-between">
@@ -621,7 +659,7 @@ function DeviceDetailPage() {
 						<p className="text-muted-foreground text-xs">
 							{device.displayPhoneNumber ??
 								device.phoneNumber ??
-								"No phone number"}
+								panelT("No phone number")}
 						</p>
 						<div className="mt-1">
 							<ProviderBadge provider={device.provider} />
@@ -655,7 +693,7 @@ function DeviceDetailPage() {
 						) : (
 							<Power className="size-3.5" />
 						)}
-						{isMeta ? "Validate credentials" : "Connect"}
+						{isMeta ? panelT("Validate credentials") : panelT("Connect")}
 					</Button>
 				)}
 				{device.status !== "disconnected" && (
@@ -669,7 +707,7 @@ function DeviceDetailPage() {
 						disabled={disconnectMut.isPending}
 					>
 						<PowerOff className="size-3.5" />
-						Disconnect
+						{panelT("Disconnect")}
 					</Button>
 				)}
 				{isMeta ? (
@@ -680,7 +718,7 @@ function DeviceDetailPage() {
 						onClick={() => setConfigureOpen(true)}
 					>
 						<Settings className="size-3.5" />
-						Configure
+						{panelT("Configure")}
 					</Button>
 				) : (
 					device.status === "connecting" && (
@@ -691,7 +729,7 @@ function DeviceDetailPage() {
 							onClick={() => setQrOpen(true)}
 						>
 							<QrCode className="size-3.5" />
-							Show QR
+							{panelT("Show QR")}
 						</Button>
 					)
 				)}
@@ -703,7 +741,7 @@ function DeviceDetailPage() {
 					disabled={logoutMut.isPending}
 				>
 					<LogOut className="size-3.5" />
-					{isMeta ? "Remove credentials" : "Reset session"}
+					{isMeta ? panelT("Remove credentials") : panelT("Reset session")}
 				</Button>
 			</div>
 
@@ -721,50 +759,60 @@ function DeviceDetailPage() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-sm">Device Info</CardTitle>
+					<CardTitle className="text-sm">{panelT("Device Info")}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<dl className="grid gap-2 text-xs">
 						<div className="flex justify-between">
-							<dt className="text-muted-foreground">ID</dt>
+							<dt className="text-muted-foreground">{panelT("ID")}</dt>
 							<dd className="font-mono">{device.id}</dd>
 						</div>
 						<div className="flex justify-between">
-							<dt className="text-muted-foreground">Provider</dt>
+							<dt className="text-muted-foreground">{panelT("Provider")}</dt>
 							<dd>
 								<ProviderBadge provider={device.provider} />
 							</dd>
 						</div>
 						<div className="flex justify-between">
-							<dt className="text-muted-foreground">Phone</dt>
+							<dt className="text-muted-foreground">{panelT("Phone")}</dt>
 							<dd>{device.displayPhoneNumber ?? device.phoneNumber ?? "—"}</dd>
 						</div>
 						{isMeta && (
 							<>
 								<div className="flex justify-between gap-4">
-									<dt className="text-muted-foreground">Phone Number ID</dt>
+									<dt className="text-muted-foreground">
+										{panelT("Phone Number ID")}
+									</dt>
 									<dd className="font-mono">{device.externalId ?? "—"}</dd>
 								</div>
 								<div className="flex justify-between gap-4">
-									<dt className="text-muted-foreground">WABA ID</dt>
+									<dt className="text-muted-foreground">{panelT("WABA ID")}</dt>
 									<dd className="font-mono">
 										{device.businessAccountId ?? "—"}
 									</dd>
 								</div>
 								<div className="flex justify-between gap-4">
-									<dt className="text-muted-foreground">Last connected</dt>
+									<dt className="text-muted-foreground">
+										{panelT("Last connected")}
+									</dt>
 									<dd>{formatDate(device.lastConnectedAt)}</dd>
 								</div>
 								<div className="flex justify-between gap-4">
-									<dt className="text-muted-foreground">Last webhook</dt>
+									<dt className="text-muted-foreground">
+										{panelT("Last webhook")}
+									</dt>
 									<dd>{formatDate(device.lastWebhookAt)}</dd>
 								</div>
 								<div className="flex justify-between gap-4">
-									<dt className="text-muted-foreground">Status reason</dt>
+									<dt className="text-muted-foreground">
+										{panelT("Status reason")}
+									</dt>
 									<dd>{device.statusReason ?? "—"}</dd>
 								</div>
 								<div className="flex justify-between gap-4">
-									<dt className="text-muted-foreground">Last error</dt>
+									<dt className="text-muted-foreground">
+										{panelT("Last error")}
+									</dt>
 									<dd className="max-w-lg text-right text-destructive">
 										{device.lastError ?? "—"}
 									</dd>
@@ -772,17 +820,17 @@ function DeviceDetailPage() {
 							</>
 						)}
 						<div className="flex justify-between">
-							<dt className="text-muted-foreground">Status</dt>
+							<dt className="text-muted-foreground">{panelT("Status")}</dt>
 							<dd>
 								<DeviceStatusBadge status={device.status} />
 							</dd>
 						</div>
 						<div className="flex justify-between">
-							<dt className="text-muted-foreground">Added</dt>
+							<dt className="text-muted-foreground">{panelT("Added")}</dt>
 							<dd>{new Date(device.createdAt).toLocaleString()}</dd>
 						</div>
 						<div className="flex justify-between">
-							<dt className="text-muted-foreground">Updated</dt>
+							<dt className="text-muted-foreground">{panelT("Updated")}</dt>
 							<dd>{new Date(device.updatedAt).toLocaleString()}</dd>
 						</div>
 					</dl>

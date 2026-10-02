@@ -36,6 +36,7 @@ import {
 	useResourceSyncCompletion,
 } from "@/components/resource-sync-controls";
 import { TagBadges, TagPicker } from "@/components/tag-picker";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/contacts")({
@@ -46,6 +47,8 @@ export const Route = createFileRoute("/dashboard/$organizationSlug/contacts")({
 });
 
 function ContactsPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const trackSyncCompletion = useResourceSyncCompletion("contacts");
@@ -74,7 +77,7 @@ function ContactsPage() {
 				setAddOpen(false);
 				setNewPhone("");
 				setNewName("");
-				toast.success("Contact added");
+				toast.success(panelT("Contact added"));
 				refetch();
 			},
 			onError: (e) => toast.error(e.message ?? "Failed to add contact"),
@@ -84,7 +87,7 @@ function ContactsPage() {
 	const deleteMut = useMutation(
 		trpc.contact.delete.mutationOptions({
 			onSuccess: () => {
-				toast.success("Contact deleted");
+				toast.success(panelT("Contact deleted"));
 				refetch();
 			},
 			onError: (e) => toast.error(e.message ?? "Failed to delete contact"),
@@ -94,16 +97,16 @@ function ContactsPage() {
 		trpc.contact.syncOne.mutationOptions({
 			onSuccess: (result) => {
 				trackSyncCompletion(result);
-				toast.success("Contact sync queued");
+				toast.success(panelT("Contact sync queued"));
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
 	const columns = [
 		{
 			key: "name",
-			header: "Name",
+			header: panelT("Name"),
 			cell: (row: (typeof contacts)[0]) => {
 				const primary = row.phoneNumber ?? row.name ?? row.pushName ?? row.jid;
 				const secondary = [row.name, row.pushName]
@@ -123,14 +126,14 @@ function ContactsPage() {
 		},
 		{
 			key: "phoneNumber",
-			header: "Phone",
+			header: panelT("Phone"),
 			cell: (row: (typeof contacts)[0]) => (
 				<span className="text-xs">{row.phoneNumber ?? row.jid}</span>
 			),
 		},
 		{
 			key: "source",
-			header: "Source",
+			header: panelT("Source"),
 			cell: (row: (typeof contacts)[0]) => (
 				<Badge variant="outline" className="h-4 px-1 text-[9px]">
 					{row.source}
@@ -139,7 +142,7 @@ function ContactsPage() {
 		},
 		{
 			key: "isWaContact",
-			header: "WA",
+			header: panelT("WA"),
 			cell: (row: (typeof contacts)[0]) => (
 				<Badge
 					variant={row.isWaContact ? "default" : "secondary"}
@@ -151,7 +154,7 @@ function ContactsPage() {
 		},
 		{
 			key: "tags",
-			header: "Tags",
+			header: panelT("Tags"),
 			cell: (row: (typeof contacts)[0]) => (
 				<div className="flex items-center gap-1">
 					<TagBadges tags={row.tags} />
@@ -188,14 +191,14 @@ function ContactsPage() {
 								}
 							>
 								<RefreshCw className="size-3.5" />
-								Refresh from WhatsApp
+								{panelT("Refresh from WhatsApp")}
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								className="text-destructive"
 								onClick={() => deleteMut.mutate({ id: row.id })}
 							>
 								<Trash2 className="size-3.5" />
-								Delete
+								{panelT("Delete")}
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -208,9 +211,10 @@ function ContactsPage() {
 		<div className="flex flex-col gap-4 p-4">
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="font-semibold text-base">Contacts</h1>
+					<h1 className="font-semibold text-base">{panelT("Contacts")}</h1>
 					<p className="text-muted-foreground text-xs">
-						{contacts.length} contacts · synced from your WhatsApp devices
+						{contacts.length}{" "}
+						{panelT("contacts · synced from your WhatsApp devices")}
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
@@ -220,13 +224,13 @@ function ContactsPage() {
 							render={<Button size="sm" className="h-7 gap-1.5 text-xs" />}
 						>
 							<Plus className="size-3.5" />
-							Add Contact
+							{panelT("Add Contact")}
 						</DialogTrigger>
 						<DialogContent>
 							<DialogHeader>
-								<DialogTitle>Add Contact</DialogTitle>
+								<DialogTitle>{panelT("Add Contact")}</DialogTitle>
 								<DialogDescription>
-									Manually add a WhatsApp contact by phone number.
+									{panelT("Manually add a WhatsApp contact by phone number.")}
 								</DialogDescription>
 							</DialogHeader>
 							<div className="flex flex-col gap-3">
@@ -235,7 +239,7 @@ function ContactsPage() {
 										className="font-medium text-xs"
 										htmlFor="contact-phone"
 									>
-										Phone Number *
+										{panelT("Phone Number *")}
 									</label>
 									<Input
 										id="contact-phone"
@@ -246,11 +250,11 @@ function ContactsPage() {
 								</div>
 								<div className="flex flex-col gap-1">
 									<label className="font-medium text-xs" htmlFor="contact-name">
-										Name
+										{panelT("Name")}
 									</label>
 									<Input
 										id="contact-name"
-										placeholder="John Doe"
+										placeholder={panelT("John Doe")}
 										value={newName}
 										onChange={(e) => setNewName(e.target.value)}
 									/>
@@ -262,7 +266,7 @@ function ContactsPage() {
 									size="sm"
 									onClick={() => setAddOpen(false)}
 								>
-									Cancel
+									{panelT("Cancel")}
 								</Button>
 								<Button
 									size="sm"
@@ -278,7 +282,7 @@ function ContactsPage() {
 										});
 									}}
 								>
-									{addMut.isPending ? "Adding..." : "Add"}
+									{addMut.isPending ? panelT("Adding...") : panelT("Add")}
 								</Button>
 							</DialogFooter>
 						</DialogContent>
@@ -290,7 +294,7 @@ function ContactsPage() {
 				<Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
 				<Input
 					className="h-8 pl-8 text-xs"
-					placeholder="Search contacts..."
+					placeholder={panelT("Search contacts...")}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 				/>
@@ -301,8 +305,8 @@ function ContactsPage() {
 					<Users className="size-8 opacity-30" />
 					<p className="text-xs">
 						{search
-							? "No contacts found"
-							: "No contacts yet — connect a device to sync"}
+							? panelT("No contacts found")
+							: panelT("No contacts yet — connect a device to sync")}
 					</p>
 				</div>
 			) : (

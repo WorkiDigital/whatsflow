@@ -33,6 +33,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useActiveOrganization } from "@/components/active-organization";
 import { useFlowSessionSSE } from "@/hooks/use-flow-session-sse";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute(
@@ -111,6 +112,8 @@ function SessionTimeline({
 	sessionId: string;
 	flowNodes: { id: string; type?: string; data?: Record<string, unknown> }[];
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const { data } = useSuspenseQuery(
@@ -124,14 +127,14 @@ function SessionTimeline({
 	if (events.length === 0) {
 		return (
 			<div className="rounded-lg border bg-background p-3 text-muted-foreground text-xs">
-				No timeline events recorded yet.
+				{panelT("No timeline events recorded yet.")}
 			</div>
 		);
 	}
 
 	return (
 		<div>
-			<p className="mb-2 font-medium text-xs">Execution timeline</p>
+			<p className="mb-2 font-medium text-xs">{panelT("Execution timeline")}</p>
 			<div className="space-y-1.5">
 				{events.map((event) => {
 					const payload = normalizePayload(event.payload);
@@ -162,7 +165,7 @@ function SessionTimeline({
 							)}
 							{maskedPreview && (
 								<p className="mt-1 font-mono text-muted-foreground">
-									Reply: {maskedPreview}
+									{panelT("Reply:")} {maskedPreview}
 								</p>
 							)}
 						</div>
@@ -186,6 +189,8 @@ function SessionDetails({
 	onCancel: () => void;
 	isCancelling: boolean;
 }) {
+	const panelT = usePanelTranslation();
+
 	const variables = useMemo(() => {
 		if (!session.variables || typeof session.variables !== "object") return {};
 		return session.variables as Record<string, string>;
@@ -205,7 +210,7 @@ function SessionDetails({
 	return (
 		<Card className="h-full rounded-none border-0 border-l bg-card/80 py-0 ring-0">
 			<CardHeader className="border-b px-4 py-4">
-				<CardTitle className="text-sm">Session details</CardTitle>
+				<CardTitle className="text-sm">{panelT("Session details")}</CardTitle>
 				<CardDescription className="font-mono text-xs">
 					{session.contactNumber}
 				</CardDescription>
@@ -213,14 +218,16 @@ function SessionDetails({
 			<CardContent className="space-y-4 p-4">
 				<div className="space-y-2">
 					<div className="flex items-center justify-between rounded-lg border bg-background p-3">
-						<span className="text-muted-foreground text-xs">Status</span>
+						<span className="text-muted-foreground text-xs">
+							{panelT("Status")}
+						</span>
 						<Badge variant={statusVariants[session.status] ?? "outline"}>
-							{session.status}
+							{panelT(session.status)}
 						</Badge>
 					</div>
 					<div className="rounded-lg border bg-background p-3">
 						<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-							Current node
+							{panelT("Current node")}
 						</p>
 						<p className="mt-1 font-medium text-sm">{nodeLabel}</p>
 						<p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
@@ -229,7 +236,7 @@ function SessionDetails({
 					</div>
 					<div className="rounded-lg border bg-background p-3">
 						<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-							Started
+							{panelT("Started")}
 						</p>
 						<p className="mt-1 text-xs">
 							{new Date(session.createdAt).toLocaleString()}
@@ -238,7 +245,7 @@ function SessionDetails({
 					{session.completedAt && (
 						<div className="rounded-lg border bg-background p-3">
 							<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-								Completed
+								{panelT("Completed")}
 							</p>
 							<p className="mt-1 text-xs">
 								{new Date(session.completedAt).toLocaleString()}
@@ -248,7 +255,7 @@ function SessionDetails({
 					{session.expiresAt && canCancel && (
 						<div className="rounded-lg border bg-background p-3">
 							<p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-								Expires
+								{panelT("Expires")}
 							</p>
 							<p className="mt-1 text-xs">
 								{new Date(session.expiresAt).toLocaleString()}
@@ -259,7 +266,9 @@ function SessionDetails({
 
 				{Object.keys(variables).length > 0 && (
 					<div>
-						<p className="mb-2 font-medium text-xs">Masked variables</p>
+						<p className="mb-2 font-medium text-xs">
+							{panelT("Masked variables")}
+						</p>
 						<div className="space-y-1 rounded-lg border bg-background p-3">
 							{Object.entries(variables).map(([key, value]) => (
 								<div key={key} className="flex gap-2 text-xs">
@@ -275,7 +284,9 @@ function SessionDetails({
 
 				{nodeResults.length > 0 && (
 					<div>
-						<p className="mb-2 font-medium text-xs">Node progress summary</p>
+						<p className="mb-2 font-medium text-xs">
+							{panelT("Node progress summary")}
+						</p>
 						<div className="space-y-1.5">
 							{nodeResults.map((result, index) => (
 								<div
@@ -292,7 +303,7 @@ function SessionDetails({
 											}
 											className="h-4 px-1.5 text-[9px]"
 										>
-											{result.status}
+											{panelT(result.status)}
 										</Badge>
 									</div>
 									{result.output && (
@@ -320,7 +331,7 @@ function SessionDetails({
 						disabled={isCancelling}
 					>
 						<XCircle className="size-3.5" />
-						{isCancelling ? "Cancelling..." : "Cancel session"}
+						{isCancelling ? panelT("Cancelling...") : panelT("Cancel session")}
 					</Button>
 				)}
 			</CardContent>
@@ -329,6 +340,8 @@ function SessionDetails({
 }
 
 function FlowSessionsPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const { flowId } = Route.useParams();
 	const trpc = useTRPC();
@@ -351,12 +364,12 @@ function FlowSessionsPage() {
 	const cancelMut = useMutation(
 		trpc.flowSession.cancel.mutationOptions({
 			onSuccess: () => {
-				toast.success("Session cancelled");
+				toast.success(panelT("Session cancelled"));
 				setCancelId(null);
 				setSelectedId(null);
 				refetch();
 			},
-			onError: (err) => toast.error(err.message),
+			onError: (err) => toast.error(panelT(err.message)),
 		}),
 	);
 
@@ -381,10 +394,13 @@ function FlowSessionsPage() {
 		<div className="flex h-full min-h-0 flex-col overflow-hidden">
 			<div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background px-4 md:px-5">
 				<div>
-					<h1 className="font-semibold text-sm">{flow.name} · Flow Sessions</h1>
+					<h1 className="font-semibold text-sm">
+						{flow.name} {panelT("· Flow Sessions")}
+					</h1>
 					<p className="text-muted-foreground text-xs">
-						{activeSessions.length} active · {historySessions.length} historical
-						sessions with realtime updates.
+						{activeSessions.length} {panelT("active ·")}{" "}
+						{historySessions.length}{" "}
+						{panelT("historical sessions with realtime updates.")}
 					</p>
 				</div>
 				<Link
@@ -393,7 +409,7 @@ function FlowSessionsPage() {
 					className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
 				>
 					<ArrowLeft className="size-3.5" />
-					Back to Editor
+					{panelT("Back to Editor")}
 				</Link>
 			</div>
 
@@ -408,7 +424,8 @@ function FlowSessionsPage() {
 								onClick={() => setTab("active")}
 							>
 								<Loader2 className="size-3.5" />
-								Active ({activeSessions.length})
+								{panelT("Active (")}
+								{activeSessions.length})
 							</Button>
 							<Button
 								variant={tab === "history" ? "default" : "outline"}
@@ -417,7 +434,8 @@ function FlowSessionsPage() {
 								onClick={() => setTab("history")}
 							>
 								<CheckCircle className="size-3.5" />
-								History ({historySessions.length})
+								{panelT("History (")}
+								{historySessions.length})
 							</Button>
 						</div>
 					</CardHeader>
@@ -427,10 +445,14 @@ function FlowSessionsPage() {
 								<Clock className="size-10 text-muted-foreground/50" />
 								<div className="space-y-1 text-center">
 									<p className="font-medium text-sm">
-										No {tab === "active" ? "active" : "historical"} sessions
+										{panelT("No")}{" "}
+										{tab === "active" ? panelT("active") : panelT("historical")}{" "}
+										{panelT("sessions")}
 									</p>
 									<p className="text-muted-foreground text-xs">
-										Sessions appear when a contact reaches this flow.
+										{panelT(
+											"Sessions appear when a contact reaches this flow.",
+										)}
 									</p>
 								</div>
 							</div>
@@ -438,12 +460,14 @@ function FlowSessionsPage() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Contact</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Current node</TableHead>
-										<TableHead>Started</TableHead>
+										<TableHead>{panelT("Contact")}</TableHead>
+										<TableHead>{panelT("Status")}</TableHead>
+										<TableHead>{panelT("Current node")}</TableHead>
+										<TableHead>{panelT("Started")}</TableHead>
 										<TableHead>
-											{tab === "active" ? "Expires" : "Completed"}
+											{tab === "active"
+												? panelT("Expires")
+												: panelT("Completed")}
 										</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -467,7 +491,7 @@ function FlowSessionsPage() {
 													{session.status === "running" && (
 														<Loader2 className="size-3 animate-spin" />
 													)}
-													{session.status}
+													{panelT(session.status)}
 												</Badge>
 											</TableCell>
 											<TableCell className="text-muted-foreground">
@@ -507,7 +531,9 @@ function FlowSessionsPage() {
 						/>
 					) : (
 						<div className="flex h-full items-center justify-center p-6 text-center text-muted-foreground text-xs">
-							Select a session to view masked replies, variables, and timeline.
+							{panelT(
+								"Select a session to view masked replies, variables, and timeline.",
+							)}
 						</div>
 					)}
 				</div>
@@ -521,21 +547,22 @@ function FlowSessionsPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Cancel session?</AlertDialogTitle>
+						<AlertDialogTitle>{panelT("Cancel session?")}</AlertDialogTitle>
 						<AlertDialogDescription>
-							This will expire the active session. The contact will no longer be
-							waiting for a reply in this flow.
+							{panelT(
+								"This will expire the active session. The contact will no longer be waiting for a reply in this flow.",
+							)}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Keep session</AlertDialogCancel>
+						<AlertDialogCancel>{panelT("Keep session")}</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() => {
 								if (cancelId)
 									cancelMut.mutate({ id: cancelId, tenantId: organization.id });
 							}}
 						>
-							Cancel session
+							{panelT("Cancel session")}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

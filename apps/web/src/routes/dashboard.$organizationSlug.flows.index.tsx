@@ -47,6 +47,7 @@ import { toast } from "sonner";
 import { useActiveOrganization } from "@/components/active-organization";
 import { DataTable } from "@/components/data-table";
 import { useDeviceStatusSSE } from "@/hooks/use-device-status-sse";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/flows/")({
@@ -60,6 +61,7 @@ const statusColors: Record<string, string> = {
 };
 
 function FlowStatusBadge({ status }: { status: string }) {
+	const panelT = usePanelTranslation();
 	return (
 		<span className="inline-flex items-center gap-1.5 text-xs">
 			<span
@@ -68,7 +70,7 @@ function FlowStatusBadge({ status }: { status: string }) {
 					statusColors[status] ?? "bg-gray-400",
 				)}
 			/>
-			{status}
+			{panelT(status)}
 		</span>
 	);
 }
@@ -80,15 +82,19 @@ function FlowAccessBadge({
 	capability: "owner" | "editor" | "viewer";
 	owner: { name: string; email: string };
 }) {
+	const panelT = usePanelTranslation();
+
 	if (capability === "owner") {
-		return <Badge variant="secondary">Owned</Badge>;
+		return <Badge variant="secondary">{panelT("Owned")}</Badge>;
 	}
 
 	return (
 		<div className="space-y-1">
-			<Badge variant="outline">Shared · {capability}</Badge>
+			<Badge variant="outline">
+				{panelT("Shared ·")} {panelT(capability)}
+			</Badge>
 			<p className="max-w-48 truncate text-muted-foreground text-xs">
-				Shared by {owner.name} · {owner.email}
+				{panelT("Shared by")} {owner.name} · {owner.email}
 			</p>
 		</div>
 	);
@@ -112,6 +118,8 @@ function DeviceBadge({
 }
 
 function CreateFlowDialog({ onCreated }: { onCreated: () => void }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [open, setOpen] = useState(false);
@@ -123,7 +131,7 @@ function CreateFlowDialog({ onCreated }: { onCreated: () => void }) {
 				setName("");
 				setOpen(false);
 				onCreated();
-				toast.success("Flow created");
+				toast.success(panelT("Flow created"));
 			},
 		}),
 	);
@@ -132,15 +140,17 @@ function CreateFlowDialog({ onCreated }: { onCreated: () => void }) {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger className={cn(buttonVariants({ size: "sm" }), "text-xs")}>
 				<Plus className="size-3.5" />
-				New Flow
+				{panelT("New Flow")}
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create Flow</DialogTitle>
-					<DialogDescription>Name your automation flow.</DialogDescription>
+					<DialogTitle>{panelT("Create Flow")}</DialogTitle>
+					<DialogDescription>
+						{panelT("Name your automation flow.")}
+					</DialogDescription>
 				</DialogHeader>
 				<Input
-					placeholder="Welcome Message"
+					placeholder={panelT("Welcome Message")}
 					value={name}
 					onChange={(e) => setName(e.target.value)}
 					onKeyDown={(e) => {
@@ -151,7 +161,7 @@ function CreateFlowDialog({ onCreated }: { onCreated: () => void }) {
 				/>
 				<DialogFooter>
 					<Button variant="outline" onClick={() => setOpen(false)}>
-						Cancel
+						{panelT("Cancel")}
 					</Button>
 					<Button
 						disabled={!name.trim() || create.isPending}
@@ -159,7 +169,7 @@ function CreateFlowDialog({ onCreated }: { onCreated: () => void }) {
 							create.mutate({ name: name.trim(), tenantId: organization.id })
 						}
 					>
-						{create.isPending ? "Creating..." : "Create"}
+						{create.isPending ? panelT("Creating...") : panelT("Create")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
@@ -168,6 +178,8 @@ function CreateFlowDialog({ onCreated }: { onCreated: () => void }) {
 }
 
 function FlowsPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const { data: flows, refetch } = useSuspenseQuery(
@@ -183,7 +195,7 @@ function FlowsPage() {
 		trpc.flow.delete.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Flow deleted");
+				toast.success(panelT("Flow deleted"));
 			},
 		}),
 	);
@@ -192,7 +204,7 @@ function FlowsPage() {
 		trpc.flow.duplicate.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Flow duplicated");
+				toast.success(panelT("Flow duplicated"));
 			},
 		}),
 	);
@@ -201,7 +213,7 @@ function FlowsPage() {
 		trpc.flow.toggleStatus.mutationOptions({
 			onSuccess: () => {
 				refetch();
-				toast.success("Status updated");
+				toast.success(panelT("Status updated"));
 			},
 		}),
 	);
@@ -259,7 +271,7 @@ function FlowsPage() {
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<p className="text-muted-foreground text-sm">
-					Automate WhatsApp conversations
+					{panelT("Automate WhatsApp conversations")}
 				</p>
 				<CreateFlowDialog onCreated={() => refetch()} />
 			</div>
@@ -269,7 +281,9 @@ function FlowsPage() {
 					{flows.length === 0 ? (
 						<div className="flex flex-col items-center gap-3 py-12">
 							<MessageSquare className="size-10 text-muted-foreground/50" />
-							<p className="text-muted-foreground text-sm">No flows yet</p>
+							<p className="text-muted-foreground text-sm">
+								{panelT("No flows yet")}
+							</p>
 							<CreateFlowDialog onCreated={() => refetch()} />
 						</div>
 					) : (
@@ -279,7 +293,7 @@ function FlowsPage() {
 							columns={[
 								{
 									key: "name",
-									header: "Name",
+									header: panelT("Name"),
 									className: "font-medium",
 									cell: (f) => (
 										<Link
@@ -296,7 +310,7 @@ function FlowsPage() {
 								},
 								{
 									key: "access",
-									header: "Access",
+									header: panelT("Access"),
 									cell: (f) => (
 										<FlowAccessBadge
 											capability={f.accessCapability}
@@ -306,7 +320,7 @@ function FlowsPage() {
 								},
 								{
 									key: "device",
-									header: "Device",
+									header: panelT("Device"),
 									cell: (f) => (
 										<DeviceBadge
 											deviceId={f.deviceId}
@@ -316,18 +330,18 @@ function FlowsPage() {
 								},
 								{
 									key: "trigger",
-									header: "Trigger",
+									header: panelT("Trigger"),
 									className: "text-muted-foreground",
 									cell: (f) => f.triggerType,
 								},
 								{
 									key: "status",
-									header: "Status",
+									header: panelT("Status"),
 									cell: (f) => <FlowStatusBadge status={f.status} />,
 								},
 								{
 									key: "updated",
-									header: "Updated",
+									header: panelT("Updated"),
 									className: "text-muted-foreground",
 									cell: (f) => new Date(f.updatedAt).toLocaleDateString(),
 								},
@@ -346,8 +360,8 @@ function FlowsPage() {
 														disabled={f.accessCapability === "viewer"}
 														title={
 															f.accessCapability === "viewer"
-																? "View-only access"
-																: "Flow actions"
+																? panelT("View-only access")
+																: panelT("Flow actions")
 														}
 													/>
 												}
@@ -365,7 +379,7 @@ function FlowsPage() {
 														}
 													>
 														<Copy className="size-3.5" />
-														Duplicate
+														{panelT("Duplicate")}
 													</DropdownMenuItem>
 												)}
 												{f.accessCapability === "owner" &&
@@ -374,7 +388,7 @@ function FlowsPage() {
 															onClick={() => requestActivate(f.id)}
 														>
 															<Play className="size-3.5" />
-															Activate
+															{panelT("Activate")}
 														</DropdownMenuItem>
 													)}
 												{f.accessCapability === "owner" &&
@@ -389,7 +403,7 @@ function FlowsPage() {
 															}
 														>
 															<Pause className="size-3.5" />
-															Pause
+															{panelT("Pause")}
 														</DropdownMenuItem>
 													)}
 												{f.accessCapability === "owner" && (
@@ -403,7 +417,7 @@ function FlowsPage() {
 														}
 													>
 														<Trash2 className="size-3.5" />
-														Delete
+														{panelT("Delete")}
 													</DropdownMenuItem>
 												)}
 											</DropdownMenuContent>
@@ -428,16 +442,18 @@ function FlowsPage() {
 						<AlertDialogMedia className="bg-destructive/10">
 							<AlertTriangle className="size-5 text-destructive" />
 						</AlertDialogMedia>
-						<AlertDialogTitle>Activate and replace?</AlertDialogTitle>
+						<AlertDialogTitle>
+							{panelT("Activate and replace?")}
+						</AlertDialogTitle>
 						<AlertDialogDescription>
-							Activating this flow will pause{" "}
-							<strong>"{activeFlowOnDevice?.name}"</strong> on{" "}
-							<strong>{deviceForTarget?.name ?? "device"}</strong>. Only one
-							flow can be active per device at a time.
+							{panelT("Activating this flow will pause")}{" "}
+							<strong>"{activeFlowOnDevice?.name}"</strong> {panelT("on")}{" "}
+							<strong>{deviceForTarget?.name ?? panelT("device")}</strong>
+							{panelT(". Only one flow can be active per device at a time.")}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogCancel>{panelT("Cancel")}</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() => {
 								if (confirmFlowId) {
@@ -450,7 +466,7 @@ function FlowsPage() {
 								setConfirmFlowId(null);
 							}}
 						>
-							Activate
+							{panelT("Activate")}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

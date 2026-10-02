@@ -19,6 +19,7 @@ import {
 	useResourceSyncCompletion,
 } from "@/components/resource-sync-controls";
 import { TagBadges, TagPicker } from "@/components/tag-picker";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/groups")({
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/dashboard/$organizationSlug/groups")({
 });
 
 function GroupsPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const trackSyncCompletion = useResourceSyncCompletion("groups");
@@ -41,16 +44,16 @@ function GroupsPage() {
 		trpc.group.syncOne.mutationOptions({
 			onSuccess: (result) => {
 				trackSyncCompletion(result);
-				toast.success("Group sync queued");
+				toast.success(panelT("Group sync queued"));
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
 	const columns = [
 		{
 			key: "subject",
-			header: "Group Name",
+			header: panelT("Group Name"),
 			cell: (row: (typeof groups)[0]) => (
 				<div className="flex flex-col">
 					<span className="font-medium text-xs">{row.subject}</span>
@@ -64,14 +67,14 @@ function GroupsPage() {
 		},
 		{
 			key: "participants",
-			header: "Members",
+			header: panelT("Members"),
 			cell: (row: (typeof groups)[0]) => (
 				<span className="text-xs">{row.participantCount}</span>
 			),
 		},
 		{
 			key: "jid",
-			header: "JID",
+			header: panelT("JID"),
 			cell: (row: (typeof groups)[0]) => (
 				<span className="font-mono text-[10px] text-muted-foreground">
 					{row.jid}
@@ -80,7 +83,7 @@ function GroupsPage() {
 		},
 		{
 			key: "source",
-			header: "Source",
+			header: panelT("Source"),
 			cell: (row: (typeof groups)[0]) => (
 				<Badge variant="outline" className="h-4 px-1 text-[9px]">
 					{row.source}
@@ -89,19 +92,19 @@ function GroupsPage() {
 		},
 		{
 			key: "isMember",
-			header: "Member",
+			header: panelT("Member"),
 			cell: (row: (typeof groups)[0]) => (
 				<Badge
 					variant={row.isMember ? "default" : "secondary"}
 					className="h-4 px-1 text-[9px]"
 				>
-					{row.isMember ? "✓" : "Left"}
+					{row.isMember ? "✓" : panelT("Left")}
 				</Badge>
 			),
 		},
 		{
 			key: "tags",
-			header: "Tags",
+			header: panelT("Tags"),
 			cell: (row: (typeof groups)[0]) => (
 				<div className="flex items-center gap-1">
 					<TagBadges tags={row.tags} />
@@ -136,7 +139,7 @@ function GroupsPage() {
 								onClick={() => syncOneMut.mutate({ id: row.id })}
 							>
 								<RefreshCw className="size-3.5" />
-								Refresh from WhatsApp
+								{panelT("Refresh from WhatsApp")}
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -149,9 +152,10 @@ function GroupsPage() {
 		<div className="flex flex-col gap-4 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				<div>
-					<h1 className="font-semibold text-base">Groups</h1>
+					<h1 className="font-semibold text-base">{panelT("Groups")}</h1>
 					<p className="text-muted-foreground text-xs">
-						{groups.length} groups · synced from your WhatsApp devices
+						{groups.length}{" "}
+						{panelT("groups · synced from your WhatsApp devices")}
 					</p>
 				</div>
 				<ResourceSyncControls devices={devices} resource="groups" />
@@ -161,7 +165,7 @@ function GroupsPage() {
 				<Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
 				<Input
 					className="h-8 pl-8 text-xs"
-					placeholder="Search groups..."
+					placeholder={panelT("Search groups...")}
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 				/>
@@ -172,8 +176,8 @@ function GroupsPage() {
 					<UsersRound className="size-8 opacity-30" />
 					<p className="text-xs">
 						{search
-							? "No groups found"
-							: "No groups yet — connect a device to sync"}
+							? panelT("No groups found")
+							: panelT("No groups yet — connect a device to sync")}
 					</p>
 				</div>
 			) : (

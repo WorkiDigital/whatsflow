@@ -287,3 +287,15 @@ Publicação: reimplantar `whatsapp-flow-api` da `main` corrigida. Esta correç�
 não exige migration, mudança de variáveis de ambiente nem deploy da Web.
 Após o deploy, abrir Fluxos e confirmar que `flow.list` responde sem HTTP 500.
 Os testes locais não comprovam o estado da instância publicada.
+
+## 2026-10-02 — Tradução incompleta no painel
+
+**Sintoma:** selecionar Português alterava a navegação, mas várias telas, campos, botões e avisos continuavam em inglês.
+
+**Causa:** o idioma já era persistido corretamente; faltava conectar os textos das páginas e componentes ao provedor de tradução. A paleta e os nomes padrão dos blocos também eram exibidos diretamente a partir de constantes em inglês.
+
+**Correção:** catálogo de textos da interface em português e espanhol, consumido pelas páginas de dispositivos, fluxos, sessões, contatos, grupos, canais, conversas, webhooks, registros, auditoria, usuários, funções, conta e configurações. O editor traduz a paleta, os nomes padrão e os formulários sem alterar os dados salvos. Nomes personalizados, mensagens dos contatos, números, tokens, URLs, identificadores técnicos e diagnósticos desconhecidos mantêm o conteúdo original.
+
+**Prevenção:** teste estático impede novos textos literais em JSX e atributos de interface do painel e exige traduções dos textos usados com `panelT`. Testes de interação mudam o idioma em componentes reais, verificam tabelas, campos e estados vazios, e confirmam que a tradução dos blocos não modifica os dados do fluxo. Ao adicionar texto de interface, usar o provedor e incluir português/espanhol no catálogo; não traduzir valores persistidos nem opções enviadas à API.
+
+**Publicação:** implantar `whatsapp-flow-web` a partir da `main` com `Dockerfile.web`. Esta alteração não exige migração de banco nem alterações na API. A situação de cada implantação deve ser confirmada no EasyPanel antes de declarar a atualização disponível em produção.

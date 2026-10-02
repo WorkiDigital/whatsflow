@@ -73,8 +73,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
 import { MediaUpload } from "@/components/media-upload";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/settings")({
@@ -427,10 +427,12 @@ function EnterpriseAuditPanel({
 		checks: EnterpriseAuditCheck[];
 	};
 }) {
+	const panelT = usePanelTranslation();
+
 	if (!audit) {
 		return (
 			<div className="rounded-lg border bg-muted/30 p-4 text-muted-foreground text-sm">
-				Loading enterprise readiness checks...
+				{panelT("Loading enterprise readiness checks...")}
 			</div>
 		);
 	}
@@ -441,7 +443,7 @@ function EnterpriseAuditPanel({
 				{(["pass", "warn", "fail", "manual"] as const).map((status) => (
 					<div key={status} className="rounded-lg border bg-muted/30 p-3">
 						<p className="text-muted-foreground text-xs uppercase tracking-wide">
-							{auditStatusLabel(status)}
+							{panelT(auditStatusLabel(status))}
 						</p>
 						<p className="font-semibold text-2xl">{audit.summary[status]}</p>
 					</div>
@@ -452,10 +454,10 @@ function EnterpriseAuditPanel({
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Check</TableHead>
-							<TableHead>Status</TableHead>
-							<TableHead>Evidence</TableHead>
-							<TableHead>Recommendation</TableHead>
+							<TableHead>{panelT("Check")}</TableHead>
+							<TableHead>{panelT("Status")}</TableHead>
+							<TableHead>{panelT("Evidence")}</TableHead>
+							<TableHead>{panelT("Recommendation")}</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -470,7 +472,7 @@ function EnterpriseAuditPanel({
 										<div className="space-y-1">
 											{index === 0 && (
 												<Badge variant="outline">
-													{auditCategoryLabel(category)}
+													{panelT(auditCategoryLabel(category))}
 												</Badge>
 											)}
 											<p className="font-medium">{check.title}</p>
@@ -478,7 +480,7 @@ function EnterpriseAuditPanel({
 									</TableCell>
 									<TableCell className="align-top">
 										<Badge variant={auditStatusVariant(check.status)}>
-											{auditStatusLabel(check.status)}
+											{panelT(auditStatusLabel(check.status))}
 										</Badge>
 									</TableCell>
 									<TableCell className="max-w-md align-top text-muted-foreground text-sm">
@@ -495,8 +497,10 @@ function EnterpriseAuditPanel({
 			</div>
 
 			<p className="text-muted-foreground text-xs">
-				Generated {new Date(audit.generatedAt).toLocaleString()}. This is a
-				runtime readiness snapshot, not an immutable compliance report.
+				{panelT("Generated")} {new Date(audit.generatedAt).toLocaleString()}
+				{panelT(
+					". This is a runtime readiness snapshot, not an immutable compliance report.",
+				)}
 			</p>
 		</div>
 	);
@@ -528,6 +532,8 @@ function normalizeBrandingAssetUrl(value: string) {
 }
 
 function SettingsPage() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const queryClient = useQueryClient();
 	const [brandingForm, setBrandingForm] =
@@ -638,30 +644,30 @@ function SettingsPage() {
 	const saveBranding = useMutation(
 		trpc.settings.updateBranding.mutationOptions({
 			onSuccess: () => {
-				toast.success("Branding settings saved");
+				toast.success(panelT("Branding settings saved"));
 				brandingQuery.refetch();
 				invalidatePublicSettings();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
 	const updateSignupSettings = useMutation(
 		trpc.settings.updateSignupSettings.mutationOptions({
 			onSuccess: () => {
-				toast.success("Account registration settings saved");
+				toast.success(panelT("Account registration settings saved"));
 				signupSettingsQuery.refetch();
 				auditQuery.refetch();
 				invalidatePublicSettings();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
 	const saveSmtp = useMutation(
 		trpc.settings.updateSmtpSettings.mutationOptions({
 			onSuccess: () => {
-				toast.success("SMTP settings saved");
+				toast.success(panelT("SMTP settings saved"));
 				setSmtpForm((current) => ({
 					...current,
 					password: "",
@@ -670,7 +676,7 @@ function SettingsPage() {
 				smtpQuery.refetch();
 				auditQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
@@ -679,28 +685,30 @@ function SettingsPage() {
 			onSuccess: (result) => {
 				if (result.sent) {
 					toast.success(
-						`SMTP test email sent via ${smtpSourceLabel(result.source)}`,
+						panelT("SMTP test email sent via {v0}", {
+							v0: smtpSourceLabel(result.source),
+						}),
 					);
 				} else {
 					toast.error(result.error);
 				}
 				auditQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
 	const createOidcProvider = useMutation(
 		trpc.settings.createOidcProvider.mutationOptions({
 			onSuccess: (provider) => {
-				toast.success("OIDC connection created");
+				toast.success(panelT("OIDC connection created"));
 				setNewOidcDisplayName("");
 				setCreateOidcDialogOpen(false);
 				openProviderSheet(providerToForm(provider, provider.providerId));
 				providersQuery.refetch();
 				invalidatePublicSettings();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
@@ -716,7 +724,7 @@ function SettingsPage() {
 				providersQuery.refetch();
 				invalidatePublicSettings();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
@@ -731,7 +739,7 @@ function SettingsPage() {
 				providersQuery.refetch();
 				invalidatePublicSettings();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
@@ -755,7 +763,7 @@ function SettingsPage() {
 				providersQuery.refetch();
 				invalidatePublicSettings();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 
@@ -774,10 +782,12 @@ function SettingsPage() {
 			auditQuery.error?.message;
 		return (
 			<div className="space-y-2">
-				<h2 className="font-semibold text-xl">Settings unavailable</h2>
+				<h2 className="font-semibold text-xl">
+					{panelT("Settings unavailable")}
+				</h2>
 				<p className="text-muted-foreground text-sm">
 					{message === "Admin access required"
-						? "You do not have access to settings."
+						? panelT("You do not have access to settings.")
 						: message}
 				</p>
 			</div>
@@ -786,7 +796,7 @@ function SettingsPage() {
 
 	const submitBranding = () => {
 		if (supportEmailInvalid) {
-			toast.error("Enter a valid support email address");
+			toast.error(panelT("Enter a valid support email address"));
 			return;
 		}
 
@@ -804,11 +814,11 @@ function SettingsPage() {
 		const host = smtpForm.host.trim();
 		const fromAddress = smtpForm.fromAddress.trim();
 		if ((host || fromAddress) && (!host || !fromAddress)) {
-			toast.error("SMTP host and from email are required together");
+			toast.error(panelT("SMTP host and from email are required together"));
 			return;
 		}
 		if (smtpFromInvalid) {
-			toast.error("Enter a valid from email address");
+			toast.error(panelT("Enter a valid from email address"));
 			return;
 		}
 
@@ -826,7 +836,7 @@ function SettingsPage() {
 	const submitSmtpTest = () => {
 		const to = smtpForm.testTo.trim();
 		if (!to || smtpTestInvalid) {
-			toast.error("Enter a valid test recipient email");
+			toast.error(panelT("Enter a valid test recipient email"));
 			return;
 		}
 		testSmtp.mutate({ to });
@@ -835,7 +845,7 @@ function SettingsPage() {
 	const submitProvider = () => {
 		if (!providerForm) return;
 		if (providerForm.type === "oidc" && !providerForm.providerId) {
-			toast.error("Create an OIDC connection first");
+			toast.error(panelT("Create an OIDC connection first"));
 			return;
 		}
 
@@ -863,7 +873,7 @@ function SettingsPage() {
 	const submitCreateOidcProvider = () => {
 		const displayName = newOidcDisplayName.trim();
 		if (!displayName) {
-			toast.error("Enter an OIDC connection name");
+			toast.error(panelT("Enter an OIDC connection name"));
 			return;
 		}
 
@@ -895,7 +905,7 @@ function SettingsPage() {
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem onClick={() => openProviderSheet(form)}>
 					<Edit3 className="mr-2 size-3.5" />
-					{configured ? "Edit" : "Configure"}
+					{configured ? panelT("Edit") : panelT("Configure")}
 				</DropdownMenuItem>
 				{configured && (
 					<DropdownMenuItem
@@ -907,7 +917,7 @@ function SettingsPage() {
 							})
 						}
 					>
-						{enabled ? "Disable" : "Enable"}
+						{enabled ? panelT("Disable") : panelT("Enable")}
 					</DropdownMenuItem>
 				)}
 				{configured && (
@@ -917,7 +927,7 @@ function SettingsPage() {
 						onClick={() => setDeleteProviderId(providerId)}
 					>
 						<Trash2 className="mr-2 size-3.5" />
-						Delete
+						{panelT("Delete")}
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>
@@ -927,9 +937,13 @@ function SettingsPage() {
 	return (
 		<div className="space-y-6">
 			<div>
-				<h2 className="font-semibold text-2xl tracking-tight">Settings</h2>
+				<h2 className="font-semibold text-2xl tracking-tight">
+					{panelT("Settings")}
+				</h2>
 				<p className="text-muted-foreground text-sm">
-					Configure app branding, OAuth sign-in, and OIDC SSO connections.
+					{panelT(
+						"Configure app branding, OAuth sign-in, and OIDC SSO connections.",
+					)}
 				</p>
 			</div>
 
@@ -937,16 +951,18 @@ function SettingsPage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<Bot className="size-5" />
-						Branding
+						{panelT("Branding")}
 					</CardTitle>
 					<CardDescription>
-						These values are shown on login, header, and dashboard shell.
+						{panelT(
+							"These values are shown on login, header, and dashboard shell.",
+						)}
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">
-							<Label htmlFor="appName">App name</Label>
+							<Label htmlFor="appName">{panelT("App name")}</Label>
 							<Input
 								id="appName"
 								value={brandingForm.appName}
@@ -959,7 +975,7 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="appTagline">Tagline</Label>
+							<Label htmlFor="appTagline">{panelT("Tagline")}</Label>
 							<Input
 								id="appTagline"
 								value={brandingForm.appTagline}
@@ -972,9 +988,9 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label>Logo image</Label>
+							<Label>{panelT("Logo image")}</Label>
 							<MediaUpload
-								label="Logo"
+								label={panelT("Logo")}
 								accept="image/png,image/jpeg,image/webp,image/gif"
 								maxSizeMb={2}
 								value={brandingForm.logoUrl}
@@ -993,9 +1009,9 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label>Favicon image</Label>
+							<Label>{panelT("Favicon image")}</Label>
 							<MediaUpload
-								label="Favicon"
+								label={panelT("Favicon")}
 								accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon,.ico"
 								maxSizeMb={1}
 								value={brandingForm.faviconUrl}
@@ -1014,7 +1030,7 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label>Primary color</Label>
+							<Label>{panelT("Primary color")}</Label>
 							<ColorPicker
 								value={brandingForm.primaryColor || "#25D366"}
 								showAlpha={false}
@@ -1027,7 +1043,7 @@ function SettingsPage() {
 							/>
 							<div className="flex items-center gap-2">
 								<span className="font-mono text-muted-foreground text-xs">
-									{brandingForm.primaryColor || "Not set"}
+									{brandingForm.primaryColor || panelT("Not set")}
 								</span>
 								<Button
 									type="button"
@@ -1040,12 +1056,12 @@ function SettingsPage() {
 										}))
 									}
 								>
-									Clear
+									{panelT("Clear")}
 								</Button>
 							</div>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="supportEmail">Support email</Label>
+							<Label htmlFor="supportEmail">{panelT("Support email")}</Label>
 							<Input
 								id="supportEmail"
 								type="email"
@@ -1060,19 +1076,19 @@ function SettingsPage() {
 							/>
 							{supportEmailInvalid && (
 								<p className="text-destructive text-xs">
-									Enter a valid email address.
+									{panelT("Enter a valid email address.")}
 								</p>
 							)}
 						</div>
 					</div>
 
 					<div className="rounded-lg border bg-muted/40 p-4">
-						<p className="font-medium text-sm">Preview</p>
+						<p className="font-medium text-sm">{panelT("Preview")}</p>
 						<div className="mt-2 flex items-center gap-3">
 							{brandingForm.logoUrl ? (
 								<img
 									src={brandingForm.logoUrl}
-									alt="Logo preview"
+									alt={panelT("Logo preview")}
 									className="size-10 rounded object-cover"
 								/>
 							) : (
@@ -1083,7 +1099,7 @@ function SettingsPage() {
 							<div>
 								<p className="font-semibold text-lg">{brandingForm.appName}</p>
 								<p className="text-muted-foreground text-sm">
-									{brandingForm.appTagline || "No tagline"}
+									{brandingForm.appTagline || panelT("No tagline")}
 								</p>
 							</div>
 						</div>
@@ -1094,7 +1110,9 @@ function SettingsPage() {
 						disabled={saveBranding.isPending || supportEmailInvalid}
 					>
 						<Save />
-						{saveBranding.isPending ? "Saving..." : "Save branding"}
+						{saveBranding.isPending
+							? panelT("Saving...")
+							: panelT("Save branding")}
 					</Button>
 				</CardContent>
 			</Card>
@@ -1105,31 +1123,31 @@ function SettingsPage() {
 						<div className="space-y-1">
 							<CardTitle className="flex items-center gap-2">
 								<Mail className="size-5" />
-								Email / SMTP
+								{panelT("Email / SMTP")}
 							</CardTitle>
 							<CardDescription>
-								Configure outbound email for user invitations and operational
-								notifications.
+								{panelT(
+									"Configure outbound email for user invitations and operational notifications.",
+								)}
 							</CardDescription>
 						</div>
 						<Badge variant={smtpSourceVariant(smtpQuery.data?.source)}>
-							{smtpSourceLabel(smtpQuery.data?.source)}
+							{panelT(smtpSourceLabel(smtpQuery.data?.source))}
 						</Badge>
 					</div>
 				</CardHeader>
 				<CardContent className="space-y-5">
 					<div className="rounded-lg border bg-muted/40 p-4 text-muted-foreground text-sm">
-						Database SMTP settings override environment variables when host,
-						port, and from email are set. Clear host/from email to restore
-						environment fallback. The password is write-only and never shown
-						after saving.
+						{panelT(
+							"Database SMTP settings override environment variables when host, port, and from email are set. Clear host/from email to restore environment fallback. The password is write-only and never shown after saving.",
+						)}
 					</div>
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">
-							<Label htmlFor="smtpHost">SMTP host</Label>
+							<Label htmlFor="smtpHost">{panelT("SMTP host")}</Label>
 							<Input
 								id="smtpHost"
-								placeholder="smtp.example.com"
+								placeholder={panelT("smtp.example.com")}
 								value={smtpForm.host}
 								onChange={(event) =>
 									setSmtpForm((current) => ({
@@ -1140,7 +1158,7 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="smtpPort">Port</Label>
+							<Label htmlFor="smtpPort">{panelT("Port")}</Label>
 							<Input
 								id="smtpPort"
 								type="number"
@@ -1156,7 +1174,7 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="smtpUser">Username</Label>
+							<Label htmlFor="smtpUser">{panelT("Username")}</Label>
 							<Input
 								id="smtpUser"
 								value={smtpForm.user}
@@ -1170,19 +1188,21 @@ function SettingsPage() {
 						</div>
 						<div className="space-y-2">
 							<div className="flex items-center justify-between gap-3">
-								<Label htmlFor="smtpPassword">Password</Label>
+								<Label htmlFor="smtpPassword">{panelT("Password")}</Label>
 								<Badge
 									variant={
 										smtpQuery.data?.hasPassword ? "secondary" : "outline"
 									}
 								>
-									{smtpQuery.data?.hasPassword ? "Stored" : "Missing"}
+									{smtpQuery.data?.hasPassword
+										? panelT("Stored")
+										: panelT("Missing")}
 								</Badge>
 							</div>
 							<Input
 								id="smtpPassword"
 								type="password"
-								placeholder="Leave blank to keep existing password"
+								placeholder={panelT("Leave blank to keep existing password")}
 								value={smtpForm.password}
 								onChange={(event) =>
 									setSmtpForm((current) => ({
@@ -1194,12 +1214,12 @@ function SettingsPage() {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="smtpFrom">From email</Label>
+							<Label htmlFor="smtpFrom">{panelT("From email")}</Label>
 							<Input
 								id="smtpFrom"
 								type="email"
 								aria-invalid={smtpFromInvalid || undefined}
-								placeholder="noreply@example.com"
+								placeholder={panelT("noreply@example.com")}
 								value={smtpForm.fromAddress}
 								onChange={(event) =>
 									setSmtpForm((current) => ({
@@ -1210,16 +1230,16 @@ function SettingsPage() {
 							/>
 							{smtpFromInvalid && (
 								<p className="text-destructive text-xs">
-									Enter a valid email address.
+									{panelT("Enter a valid email address.")}
 								</p>
 							)}
 						</div>
 						<div className="space-y-3 rounded-lg border p-3">
 							<div className="flex items-center justify-between gap-3">
 								<div className="space-y-1">
-									<Label htmlFor="smtpSecure">Secure TLS</Label>
+									<Label htmlFor="smtpSecure">{panelT("Secure TLS")}</Label>
 									<p className="text-muted-foreground text-xs">
-										Use implicit TLS, commonly port 465.
+										{panelT("Use implicit TLS, commonly port 465.")}
 									</p>
 								</div>
 								<Switch
@@ -1234,10 +1254,10 @@ function SettingsPage() {
 								<div className="flex items-center justify-between gap-3 border-t pt-3">
 									<div className="space-y-1">
 										<Label htmlFor="smtpClearPassword">
-											Clear stored password
+											{panelT("Clear stored password")}
 										</Label>
 										<p className="text-muted-foreground text-xs">
-											Use this for unauthenticated SMTP relay.
+											{panelT("Use this for unauthenticated SMTP relay.")}
 										</p>
 									</div>
 									<Switch
@@ -1261,16 +1281,16 @@ function SettingsPage() {
 						disabled={saveSmtp.isPending || smtpFromInvalid}
 					>
 						<Save />
-						{saveSmtp.isPending ? "Saving..." : "Save SMTP"}
+						{saveSmtp.isPending ? panelT("Saving...") : panelT("Save SMTP")}
 					</Button>
 					<div className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto] md:items-end">
 						<div className="space-y-2">
-							<Label htmlFor="smtpTestTo">Test recipient</Label>
+							<Label htmlFor="smtpTestTo">{panelT("Test recipient")}</Label>
 							<Input
 								id="smtpTestTo"
 								type="email"
 								aria-invalid={smtpTestInvalid || undefined}
-								placeholder="admin@example.com"
+								placeholder={panelT("admin@example.com")}
 								value={smtpForm.testTo}
 								onChange={(event) =>
 									setSmtpForm((current) => ({
@@ -1281,7 +1301,7 @@ function SettingsPage() {
 							/>
 							{smtpTestInvalid && (
 								<p className="text-destructive text-xs">
-									Enter a valid email address.
+									{panelT("Enter a valid email address.")}
 								</p>
 							)}
 						</div>
@@ -1293,7 +1313,9 @@ function SettingsPage() {
 							}
 							onClick={submitSmtpTest}
 						>
-							{testSmtp.isPending ? "Sending..." : "Send test email"}
+							{testSmtp.isPending
+								? panelT("Sending...")
+								: panelT("Send test email")}
 						</Button>
 					</div>
 				</CardContent>
@@ -1303,21 +1325,22 @@ function SettingsPage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<ShieldAlert className="size-5" />
-						Account registration
+						{panelT("Account registration")}
 					</CardTitle>
 					<CardDescription>
-						Control which methods people can use to create accounts.
+						{panelT("Control which methods people can use to create accounts.")}
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="flex items-center justify-between gap-4 rounded-lg border p-4">
 						<div className="space-y-1">
 							<Label htmlFor="emailPasswordSignupEnabled">
-								Allow email/password signup
+								{panelT("Allow email/password signup")}
 							</Label>
 							<p className="text-muted-foreground text-xs">
-								Disabling it requires a valid invitation for new password
-								accounts. Existing users can still sign in.
+								{panelT(
+									"Disabling it requires a valid invitation for new password accounts. Existing users can still sign in.",
+								)}
 							</p>
 						</div>
 						<Switch
@@ -1339,10 +1362,13 @@ function SettingsPage() {
 					</div>
 					<div className="flex items-center justify-between gap-4 rounded-lg border p-4">
 						<div className="space-y-1">
-							<Label htmlFor="globalSignupEnabled">Allow public signup</Label>
+							<Label htmlFor="globalSignupEnabled">
+								{panelT("Allow public signup")}
+							</Label>
 							<p className="text-muted-foreground text-xs">
-								When disabled, email, OAuth, and OIDC registration require a
-								valid invitation. Existing users can still sign in.
+								{panelT(
+									"When disabled, email, OAuth, and OIDC registration require a valid invitation. Existing users can still sign in.",
+								)}
 							</p>
 						</div>
 						<Switch
@@ -1370,11 +1396,12 @@ function SettingsPage() {
 						<div className="space-y-1">
 							<CardTitle className="flex items-center gap-2">
 								<KeyRound className="size-5" />
-								Auth providers
+								{panelT("Auth providers")}
 							</CardTitle>
 							<CardDescription>
-								Manage built-in OAuth providers and dynamic OIDC SSO
-								connections.
+								{panelT(
+									"Manage built-in OAuth providers and dynamic OIDC SSO connections.",
+								)}
 							</CardDescription>
 						</div>
 						{providerTab === "oidc" && (
@@ -1384,7 +1411,7 @@ function SettingsPage() {
 								onClick={() => setCreateOidcDialogOpen(true)}
 							>
 								<Plus />
-								New OIDC connection
+								{panelT("New OIDC connection")}
 							</Button>
 						)}
 					</div>
@@ -1395,19 +1422,25 @@ function SettingsPage() {
 						onValueChange={(value) => setProviderTab(value as ProviderTab)}
 					>
 						<TabsList>
-							<TabsTrigger value="oauth">OAuth providers</TabsTrigger>
-							<TabsTrigger value="oidc">OIDC connections</TabsTrigger>
+							<TabsTrigger value="oauth">
+								{panelT("OAuth providers")}
+							</TabsTrigger>
+							<TabsTrigger value="oidc">
+								{panelT("OIDC connections")}
+							</TabsTrigger>
 						</TabsList>
 						<TabsContent value="oauth" className="pt-4">
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Provider</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Client ID</TableHead>
-										<TableHead>Secret</TableHead>
-										<TableHead>Callback</TableHead>
-										<TableHead className="text-right">Actions</TableHead>
+										<TableHead>{panelT("Provider")}</TableHead>
+										<TableHead>{panelT("Status")}</TableHead>
+										<TableHead>{panelT("Client ID")}</TableHead>
+										<TableHead>{panelT("Secret")}</TableHead>
+										<TableHead>{panelT("Callback")}</TableHead>
+										<TableHead className="text-right">
+											{panelT("Actions")}
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -1437,18 +1470,20 @@ function SettingsPage() {
 															configured,
 														)}
 													>
-														{providerStatusLabel(provider, configured)}
+														{panelT(providerStatusLabel(provider, configured))}
 													</Badge>
 												</TableCell>
 												<TableCell className="max-w-56 truncate">
 													{provider?.clientId || (
 														<span className="text-muted-foreground">
-															Not set
+															{panelT("Not set")}
 														</span>
 													)}
 												</TableCell>
 												<TableCell>
-													{provider?.hasClientSecret ? "Stored" : "Missing"}
+													{provider?.hasClientSecret
+														? panelT("Stored")
+														: panelT("Missing")}
 												</TableCell>
 												<TableCell className="font-mono text-xs">
 													{provider?.callbackUrl ?? providerCallbackUrl(form)}
@@ -1471,12 +1506,14 @@ function SettingsPage() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Connection</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Client ID</TableHead>
-										<TableHead>Secret</TableHead>
-										<TableHead>Callback</TableHead>
-										<TableHead className="text-right">Actions</TableHead>
+										<TableHead>{panelT("Connection")}</TableHead>
+										<TableHead>{panelT("Status")}</TableHead>
+										<TableHead>{panelT("Client ID")}</TableHead>
+										<TableHead>{panelT("Secret")}</TableHead>
+										<TableHead>{panelT("Callback")}</TableHead>
+										<TableHead className="text-right">
+											{panelT("Actions")}
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -1501,18 +1538,22 @@ function SettingsPage() {
 													<Badge
 														variant={provider.enabled ? "default" : "secondary"}
 													>
-														{provider.enabled ? "Enabled" : "Disabled"}
+														{provider.enabled
+															? panelT("Enabled")
+															: panelT("Disabled")}
 													</Badge>
 												</TableCell>
 												<TableCell className="max-w-56 truncate">
 													{provider.clientId || (
 														<span className="text-muted-foreground">
-															Not set
+															{panelT("Not set")}
 														</span>
 													)}
 												</TableCell>
 												<TableCell>
-													{provider.hasClientSecret ? "Stored" : "Missing"}
+													{provider.hasClientSecret
+														? panelT("Stored")
+														: panelT("Missing")}
 												</TableCell>
 												<TableCell className="font-mono text-xs">
 													{provider.callbackUrl}
@@ -1534,11 +1575,12 @@ function SettingsPage() {
 												<div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
 													<div className="space-y-1">
 														<p className="font-medium">
-															No OIDC connections yet
+															{panelT("No OIDC connections yet")}
 														</p>
 														<p className="text-muted-foreground text-sm">
-															Create one to generate a stable callback URL for
-															your identity provider.
+															{panelT(
+																"Create one to generate a stable callback URL for your identity provider.",
+															)}
 														</p>
 													</div>
 													<Button
@@ -1547,7 +1589,7 @@ function SettingsPage() {
 														onClick={() => setCreateOidcDialogOpen(true)}
 													>
 														<Plus />
-														New OIDC connection
+														{panelT("New OIDC connection")}
 													</Button>
 												</div>
 											</TableCell>
@@ -1564,10 +1606,12 @@ function SettingsPage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<ShieldAlert className="size-5" />
-						Enterprise Audit
+						{panelT("Enterprise Audit")}
 					</CardTitle>
 					<CardDescription>
-						Runtime readiness checks for enterprise production hardening.
+						{panelT(
+							"Runtime readiness checks for enterprise production hardening.",
+						)}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -1585,10 +1629,11 @@ function SettingsPage() {
 			>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>New OIDC connection</DialogTitle>
+						<DialogTitle>{panelT("New OIDC connection")}</DialogTitle>
 						<DialogDescription>
-							Name this connection first. A stable provider ID and callback URL
-							will be generated and cannot be changed later.
+							{panelT(
+								"Name this connection first. A stable provider ID and callback URL will be generated and cannot be changed later.",
+							)}
 						</DialogDescription>
 					</DialogHeader>
 					<form
@@ -1599,10 +1644,12 @@ function SettingsPage() {
 						}}
 					>
 						<div className="space-y-2">
-							<Label htmlFor="newOidcDisplayName">Connection name</Label>
+							<Label htmlFor="newOidcDisplayName">
+								{panelT("Connection name")}
+							</Label>
 							<Input
 								id="newOidcDisplayName"
-								placeholder="Company SSO"
+								placeholder={panelT("Company SSO")}
 								value={newOidcDisplayName}
 								onChange={(event) => setNewOidcDisplayName(event.target.value)}
 							/>
@@ -1614,12 +1661,12 @@ function SettingsPage() {
 								disabled={createOidcProvider.isPending}
 								onClick={() => setCreateOidcDialogOpen(false)}
 							>
-								Cancel
+								{panelT("Cancel")}
 							</Button>
 							<Button type="submit" disabled={createOidcProvider.isPending}>
 								{createOidcProvider.isPending
-									? "Creating..."
-									: "Create connection"}
+									? panelT("Creating...")
+									: panelT("Create connection")}
 							</Button>
 						</DialogFooter>
 					</form>
@@ -1638,12 +1685,17 @@ function SettingsPage() {
 					<SheetHeader>
 						<SheetTitle>
 							{providerForm
-								? `Configure ${providerForm.displayName || providerTypeLabel(providerForm.type)}`
-								: "Configure provider"}
+								? panelT("Configure {v0}", {
+										v0:
+											providerForm.displayName ||
+											providerTypeLabel(providerForm.type),
+									})
+								: panelT("Configure provider")}
 						</SheetTitle>
 						<SheetDescription>
-							Secrets are write-only. Leave the client secret blank to keep the
-							existing value.
+							{panelT(
+								"Secrets are write-only. Leave the client secret blank to keep the existing value.",
+							)}
 						</SheetDescription>
 					</SheetHeader>
 					{providerForm && (
@@ -1657,33 +1709,40 @@ function SettingsPage() {
 							<div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
 								<div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
 									<div className="flex items-center justify-between gap-3">
-										<span className="text-muted-foreground">Type</span>
+										<span className="text-muted-foreground">
+											{panelT("Type")}
+										</span>
 										<Badge variant="secondary">
-											{providerTypeLabel(providerForm.type)}
+											{panelT(providerTypeLabel(providerForm.type))}
 										</Badge>
 									</div>
 									<div className="flex items-center justify-between gap-3">
-										<span className="text-muted-foreground">Provider ID</span>
+										<span className="text-muted-foreground">
+											{panelT("Provider ID")}
+										</span>
 										<code className="font-mono text-xs">
 											{providerForm.providerId}
 										</code>
 									</div>
 									<div className="space-y-1">
-										<span className="text-muted-foreground">Callback URL</span>
+										<span className="text-muted-foreground">
+											{panelT("Callback URL")}
+										</span>
 										<p className="break-all font-mono text-xs">
 											{providerCallbackUrl(providerForm)}
 										</p>
 									</div>
 									{providerForm.type === "oidc" && (
 										<p className="rounded-md border bg-background p-2 text-muted-foreground text-xs">
-											Restart the server after enabling or changing an OIDC
-											connection so Better Auth can reload generic OAuth config.
+											{panelT(
+												"Restart the server after enabling or changing an OIDC connection so Better Auth can reload generic OAuth config.",
+											)}
 										</p>
 									)}
 								</div>
 
 								<div className="space-y-2">
-									<Label htmlFor="displayName">Display name</Label>
+									<Label htmlFor="displayName">{panelT("Display name")}</Label>
 									<Input
 										id="displayName"
 										value={providerForm.displayName}
@@ -1693,9 +1752,9 @@ function SettingsPage() {
 									/>
 								</div>
 								<div className="space-y-2">
-									<Label>Provider icon</Label>
+									<Label>{panelT("Provider icon")}</Label>
 									<MediaUpload
-										label="Provider icon"
+										label={panelT("Provider icon")}
 										accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon,.ico"
 										maxSizeMb={1}
 										value={providerForm.iconUrl}
@@ -1707,12 +1766,13 @@ function SettingsPage() {
 										onUrlChange={(url) => updateProviderForm({ iconUrl: url })}
 									/>
 									<p className="text-muted-foreground text-xs">
-										Default icon uses TheSVG when available. Upload a custom
-										icon to override.
+										{panelT(
+											"Default icon uses TheSVG when available. Upload a custom icon to override.",
+										)}
 									</p>
 								</div>
 								<div className="space-y-2">
-									<Label htmlFor="clientId">Client ID</Label>
+									<Label htmlFor="clientId">{panelT("Client ID")}</Label>
 									<Input
 										id="clientId"
 										value={providerForm.clientId}
@@ -1722,11 +1782,13 @@ function SettingsPage() {
 									/>
 								</div>
 								<div className="space-y-2">
-									<Label htmlFor="clientSecret">Client secret</Label>
+									<Label htmlFor="clientSecret">
+										{panelT("Client secret")}
+									</Label>
 									<Input
 										id="clientSecret"
 										type="password"
-										placeholder="Leave blank to keep existing secret"
+										placeholder={panelT("Leave blank to keep existing secret")}
 										value={providerForm.clientSecret}
 										onChange={(event) =>
 											updateProviderForm({ clientSecret: event.target.value })
@@ -1736,7 +1798,9 @@ function SettingsPage() {
 								{providerForm.type === "oidc" && (
 									<div className="space-y-4 rounded-lg border bg-muted/30 p-3">
 										<div className="space-y-2">
-											<Label htmlFor="discoveryUrl">Discovery URL</Label>
+											<Label htmlFor="discoveryUrl">
+												{panelT("Discovery URL")}
+											</Label>
 											<Input
 												id="discoveryUrl"
 												placeholder="https://issuer/.well-known/openid-configuration"
@@ -1749,7 +1813,7 @@ function SettingsPage() {
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="issuerUrl">Issuer URL</Label>
+											<Label htmlFor="issuerUrl">{panelT("Issuer URL")}</Label>
 											<Input
 												id="issuerUrl"
 												placeholder="https://issuer"
@@ -1762,7 +1826,7 @@ function SettingsPage() {
 										<div className="grid gap-3 md:grid-cols-2">
 											<div className="space-y-2">
 												<Label htmlFor="authorizationEndpoint">
-													Authorization URL
+													{panelT("Authorization URL")}
 												</Label>
 												<Input
 													id="authorizationEndpoint"
@@ -1775,7 +1839,9 @@ function SettingsPage() {
 												/>
 											</div>
 											<div className="space-y-2">
-												<Label htmlFor="tokenEndpoint">Token URL</Label>
+												<Label htmlFor="tokenEndpoint">
+													{panelT("Token URL")}
+												</Label>
 												<Input
 													id="tokenEndpoint"
 													value={providerForm.tokenEndpoint}
@@ -1787,7 +1853,9 @@ function SettingsPage() {
 												/>
 											</div>
 											<div className="space-y-2">
-												<Label htmlFor="userinfoEndpoint">UserInfo URL</Label>
+												<Label htmlFor="userinfoEndpoint">
+													{panelT("UserInfo URL")}
+												</Label>
 												<Input
 													id="userinfoEndpoint"
 													value={providerForm.userinfoEndpoint}
@@ -1799,7 +1867,9 @@ function SettingsPage() {
 												/>
 											</div>
 											<div className="space-y-2">
-												<Label htmlFor="jwksEndpoint">JWKS URL</Label>
+												<Label htmlFor="jwksEndpoint">
+													{panelT("JWKS URL")}
+												</Label>
 												<Input
 													id="jwksEndpoint"
 													value={providerForm.jwksEndpoint}
@@ -1814,7 +1884,7 @@ function SettingsPage() {
 									</div>
 								)}
 								<div className="space-y-2">
-									<Label htmlFor="scopes">Scopes</Label>
+									<Label htmlFor="scopes">{panelT("Scopes")}</Label>
 									<Input
 										id="scopes"
 										value={providerForm.scopes}
@@ -1823,15 +1893,19 @@ function SettingsPage() {
 										}
 									/>
 									<p className="text-muted-foreground text-xs">
-										Comma-separated provider scopes.
+										{panelT("Comma-separated provider scopes.")}
 									</p>
 								</div>
 								<div className="space-y-3 rounded-lg border p-3">
 									<div className="flex items-center justify-between gap-4">
 										<div className="space-y-0.5">
-											<Label htmlFor="providerEnabled">Enable provider</Label>
+											<Label htmlFor="providerEnabled">
+												{panelT("Enable provider")}
+											</Label>
 											<p className="text-muted-foreground text-xs">
-												Enabled providers appear on the sign-in page.
+												{panelT(
+													"Enabled providers appear on the sign-in page.",
+												)}
 											</p>
 										</div>
 										<Switch
@@ -1844,9 +1918,13 @@ function SettingsPage() {
 									</div>
 									<div className="flex items-center justify-between gap-4">
 										<div className="space-y-0.5">
-											<Label htmlFor="providerAllowSignUp">Allow sign-up</Label>
+											<Label htmlFor="providerAllowSignUp">
+												{panelT("Allow sign-up")}
+											</Label>
 											<p className="text-muted-foreground text-xs">
-												Allow new users to be created from this provider.
+												{panelT(
+													"Allow new users to be created from this provider.",
+												)}
 											</p>
 										</div>
 										<Switch
@@ -1860,10 +1938,12 @@ function SettingsPage() {
 									<div className="flex items-center justify-between gap-4">
 										<div className="space-y-0.5">
 											<Label htmlFor="providerOverrideUserInfo">
-												Sync user profile on sign-in
+												{panelT("Sync user profile on sign-in")}
 											</Label>
 											<p className="text-muted-foreground text-xs">
-												Update user info from provider each time they sign in.
+												{panelT(
+													"Update user info from provider each time they sign in.",
+												)}
 											</p>
 										</div>
 										<Switch
@@ -1885,11 +1965,13 @@ function SettingsPage() {
 									disabled={saveProvider.isPending}
 									onClick={closeProviderSheet}
 								>
-									Cancel
+									{panelT("Cancel")}
 								</Button>
 								<Button type="submit" disabled={saveProvider.isPending}>
 									<Save />
-									{saveProvider.isPending ? "Saving..." : "Save provider"}
+									{saveProvider.isPending
+										? panelT("Saving...")
+										: panelT("Save provider")}
 								</Button>
 							</SheetFooter>
 						</form>
@@ -1905,23 +1987,31 @@ function SettingsPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Delete auth provider?</AlertDialogTitle>
+						<AlertDialogTitle>
+							{panelT("Delete auth provider?")}
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{providerPendingDelete?.type === "oidc"
-								? "This removes the OIDC connection configuration. If it has linked accounts, it may be disabled instead. Restart the server after OIDC changes before sign-in uses the update."
-								: "This removes this provider configuration. If it has linked accounts, it may be disabled instead."}
+								? panelT(
+										"This removes the OIDC connection configuration. If it has linked accounts, it may be disabled instead. Restart the server after OIDC changes before sign-in uses the update.",
+									)
+								: panelT(
+										"This removes this provider configuration. If it has linked accounts, it may be disabled instead.",
+									)}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={deleteProvider.isPending}>
-							Cancel
+							{panelT("Cancel")}
 						</AlertDialogCancel>
 						<AlertDialogAction
 							variant="destructive"
 							disabled={deleteProvider.isPending}
 							onClick={confirmDeleteProvider}
 						>
-							{deleteProvider.isPending ? "Deleting..." : "Delete provider"}
+							{deleteProvider.isPending
+								? panelT("Deleting...")
+								: panelT("Delete provider")}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
