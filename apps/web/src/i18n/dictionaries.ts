@@ -1,3 +1,4 @@
+import { dashboardTranslations } from "./dashboard-translations";
 export const supportedLocales = ["en", "pt", "es"] as const;
 
 export type Locale = (typeof supportedLocales)[number];
@@ -296,7 +297,10 @@ export function translate(
 	values?: Record<string, string | number>,
 ) {
 	const template =
-		dictionaries[locale]?.[key] ?? dictionaries[defaultLocale][key] ?? key;
+		dictionaries[locale]?.[key] ??
+		(locale === "en" ? undefined : dashboardTranslations[locale][key]) ??
+		dictionaries[defaultLocale][key] ??
+		key;
 
 	if (!values) return template;
 

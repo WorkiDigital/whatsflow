@@ -8,6 +8,7 @@ import { RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useActiveOrganization } from "@/components/active-organization";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 type SyncResource = "contacts" | "groups" | "newsletters";
@@ -26,6 +27,7 @@ type SyncStartResult = {
 const activeStatuses = new Set(["queued", "running"]);
 
 export function useResourceSyncCompletion(resource: SyncResource) {
+	const panelT = usePanelTranslation();
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const queryClient = useQueryClient();
@@ -70,16 +72,32 @@ export function useResourceSyncCompletion(resource: SyncResource) {
 		void queryClient.invalidateQueries({ queryKey });
 
 		if (runs.some((run) => run.status === "failed")) {
-			toast.error(`${resourceLabel(resource)} sync failed`);
+			toast.error(
+				panelT("{resource} sync failed", {
+					resource: panelT(resourceLabel(resource)),
+				}),
+			);
 		} else if (runs.some((run) => run.status === "partial")) {
-			toast.warning(`${resourceLabel(resource)} sync completed with errors`);
+			toast.warning(
+				panelT("{resource} sync completed with errors", {
+					resource: panelT(resourceLabel(resource)),
+				}),
+			);
 		} else if (runs.some((run) => run.status === "cancelled")) {
-			toast.warning(`${resourceLabel(resource)} sync was cancelled`);
+			toast.warning(
+				panelT("{resource} sync was cancelled", {
+					resource: panelT(resourceLabel(resource)),
+				}),
+			);
 		} else {
-			toast.success(`${resourceLabel(resource)} sync completed`);
+			toast.success(
+				panelT("{resource} sync completed", {
+					resource: panelT(resourceLabel(resource)),
+				}),
+			);
 		}
 		setTracked(null);
-	}, [queryClient, resource, status.data, tracked, trpc]);
+	}, [queryClient, resource, status.data, tracked, trpc, panelT]);
 
 	return (result: SyncStartResult) => {
 		const deviceId = result.runs[0]?.deviceId;
@@ -95,6 +113,8 @@ export function ResourceSyncControls({
 	devices: SyncDevice[];
 	resource: SyncResource;
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const trackCompletion = useResourceSyncCompletion(resource);
@@ -117,9 +137,13 @@ export function ResourceSyncControls({
 		trpc.device.startSync.mutationOptions({
 			onSuccess: (result) => {
 				trackCompletion(result);
-				toast.success(`${resourceLabel(resource)} sync queued`);
+				toast.success(
+					panelT("{resource} sync queued", {
+						resource: panelT(resourceLabel(resource)),
+					}),
+				);
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const hasMultipleDevices = eligibleDevices.length > 1;
@@ -128,7 +152,7 @@ export function ResourceSyncControls({
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			<NativeSelect
-				aria-label={`Device to sync ${resource}`}
+				aria-label={panelT("Device to sync {v0}", { v0: resource })}
 				className="h-8 min-w-44 text-xs"
 				value={deviceId}
 				onChange={(event) => setDeviceId(event.target.value)}
@@ -136,8 +160,8 @@ export function ResourceSyncControls({
 			>
 				<NativeSelectOption value="">
 					{hasMultipleDevices
-						? "Select connected device"
-						: "No connected device"}
+						? panelT("Select connected device")
+						: panelT("No connected device")}
 				</NativeSelectOption>
 				{eligibleDevices.map((device) => (
 					<NativeSelectOption key={device.id} value={device.id}>
@@ -162,12 +186,12 @@ export function ResourceSyncControls({
 			>
 				<RefreshCw className="size-3.5" />
 				{startSync.isPending
-					? "Queueing..."
-					: `Sync ${resourceLabel(resource)}`}
+					? panelT("Queueing...")
+					: panelT("Sync {v0}", { v0: panelT(resourceLabel(resource)) })}
 			</Button>
 			{eligibleDevices.length === 0 && (
 				<p className="text-muted-foreground text-xs">
-					A connected Baileys device is required.
+					{panelT("A connected Baileys device is required.")}
 				</p>
 			)}
 		</div>

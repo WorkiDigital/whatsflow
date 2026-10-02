@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
@@ -121,24 +122,43 @@ function actionTitle(action: UserAction | null) {
 		: "Demote admin to member?";
 }
 
-function actionDescription(action: UserAction | null) {
+function actionDescription(
+	action: UserAction | null,
+	t: ReturnType<typeof usePanelTranslation>,
+) {
 	if (!action) return "";
 	if (action.type === "sessions") {
-		return `This will sign ${action.name} out of all active sessions. They can sign in again if their account remains valid.`;
+		return t(
+			"This will sign {name} out of all active sessions. They can sign in again if their account remains valid.",
+			{ name: action.name },
+		);
 	}
 	if (action.type === "suspend") {
-		return `This will block ${action.name} from dashboard access and revoke all active sessions. A reason is required for the audit log.`;
+		return t(
+			"This will block {name} from dashboard access and revoke all active sessions. A reason is required for the audit log.",
+			{ name: action.name },
+		);
 	}
 	if (action.type === "reactivate") {
-		return `${action.name} will regain access and their suspension metadata will be cleared.`;
+		return t(
+			"{name} will regain access and their suspension metadata will be cleared.",
+			{ name: action.name },
+		);
 	}
 	if (action.role === "admin") {
-		return `${action.name} will gain access to admin settings, enterprise audit, and user management.`;
+		return t(
+			"{name} will gain access to admin settings, enterprise audit, and user management.",
+			{ name: action.name },
+		);
 	}
-	return `${action.name} will lose admin access and become a regular member.`;
+	return t("{name} will lose admin access and become a regular member.", {
+		name: action.name,
+	});
 }
 
 function UsersPage() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const { data: session } = authClient.useSession();
 	const tenantId = session?.user.id;
@@ -192,23 +212,23 @@ function UsersPage() {
 				setInviteEmail("");
 				void invitesQuery.refetch();
 				if (result.emailSent) {
-					toast.success("Invite created and email sent");
+					toast.success(panelT("Invite created and email sent"));
 				} else {
 					toast.warning(
-						result.emailError ?? "Invite created; email was not sent",
+						panelT(result.emailError ?? "Invite created; email was not sent"),
 					);
 				}
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const revokeInvite = useMutation(
 		trpc.user.revokeInvite.mutationOptions({
 			onSuccess: () => {
-				toast.success("Invite revoked");
+				toast.success(panelT("Invite revoked"));
 				void invitesQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const createTenantInvite = useMutation(
@@ -218,58 +238,60 @@ function UsersPage() {
 				setTenantInviteEmail("");
 				void tenantInvitesQuery.refetch();
 				if (result.emailSent) {
-					toast.success("Tenant invite created and email sent");
+					toast.success(panelT("Tenant invite created and email sent"));
 				} else {
 					toast.warning(
-						result.emailError ?? "Tenant invite created; email was not sent",
+						panelT(
+							result.emailError ?? "Tenant invite created; email was not sent",
+						),
 					);
 				}
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const revokeTenantInvite = useMutation(
 		trpc.tenant.revokeInvite.mutationOptions({
 			onSuccess: () => {
-				toast.success("Tenant invite revoked");
+				toast.success(panelT("Tenant invite revoked"));
 				void tenantInvitesQuery.refetch();
 			},
 			onError: (error) => {
 				if (error.data?.code === "NOT_FOUND") {
-					toast.info("This tenant invite has already been revoked.");
+					toast.info(panelT("This tenant invite has already been revoked."));
 					void tenantInvitesQuery.refetch();
 					return;
 				}
-				toast.error(error.message);
+				toast.error(panelT(error.message));
 			},
 		}),
 	);
 	const removeTenantMember = useMutation(
 		trpc.tenant.removeMember.mutationOptions({
 			onSuccess: () => {
-				toast.success("Tenant member removed");
+				toast.success(panelT("Tenant member removed"));
 				setMemberToRemove(null);
 				void tenantMembersQuery.refetch();
 			},
 			onError: (error) => {
 				if (error.data?.code === "NOT_FOUND") {
-					toast.info("This user is no longer a tenant member.");
+					toast.info(panelT("This user is no longer a tenant member."));
 					setMemberToRemove(null);
 					void tenantMembersQuery.refetch();
 					return;
 				}
-				toast.error(error.message);
+				toast.error(panelT(error.message));
 			},
 		}),
 	);
 	const updateRole = useMutation(
 		trpc.user.updateRole.mutationOptions({
 			onSuccess: () => {
-				toast.success("User role updated");
+				toast.success(panelT("User role updated"));
 				setPendingAction(null);
 				usersQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const revokeSessions = useMutation(
@@ -283,31 +305,36 @@ function UsersPage() {
 				setPendingAction(null);
 				usersQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const suspendUser = useMutation(
 		trpc.user.suspend.mutationOptions({
 			onSuccess: (result) => {
 				toast.success(
-					`User suspended${result.revoked > 0 ? ` and ${result.revoked} session${result.revoked === 1 ? "" : "s"} revoked` : ""}`,
+					panelT("User suspended{v0}", {
+						v0:
+							result.revoked > 0
+								? ` and ${result.revoked} session${result.revoked === 1 ? "" : "s"} revoked`
+								: "",
+					}),
 				);
 				setPendingAction(null);
 				setReason("");
 				usersQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const reactivateUser = useMutation(
 		trpc.user.reactivate.mutationOptions({
 			onSuccess: () => {
-				toast.success("User reactivated");
+				toast.success(panelT("User reactivated"));
 				setPendingAction(null);
 				setReason("");
 				usersQuery.refetch();
 			},
-			onError: (error) => toast.error(error.message),
+			onError: (error) => toast.error(panelT(error.message)),
 		}),
 	);
 	const users = usersQuery.data?.users ?? [];
@@ -351,7 +378,7 @@ function UsersPage() {
 	const copyInviteLink = async () => {
 		if (!inviteLink) return;
 		await navigator.clipboard.writeText(inviteLink);
-		toast.success("Invite link copied");
+		toast.success(panelT("Invite link copied"));
 	};
 
 	const createTenantInviteLink = () => {
@@ -365,7 +392,7 @@ function UsersPage() {
 	const copyTenantInviteLink = async () => {
 		if (!tenantInviteLink) return;
 		await navigator.clipboard.writeText(tenantInviteLink);
-		toast.success("Tenant invite link copied");
+		toast.success(panelT("Tenant invite link copied"));
 	};
 
 	const openAction = (action: UserAction) => {
@@ -402,10 +429,10 @@ function UsersPage() {
 	if (usersQuery.error) {
 		return (
 			<div className="space-y-2">
-				<h2 className="font-semibold text-xl">Users unavailable</h2>
+				<h2 className="font-semibold text-xl">{panelT("Users unavailable")}</h2>
 				<p className="text-muted-foreground text-sm">
 					{usersQuery.error.message === "Admin access required"
-						? "You do not have access to user management."
+						? panelT("You do not have access to user management.")
 						: usersQuery.error.message}
 				</p>
 			</div>
@@ -418,11 +445,12 @@ function UsersPage() {
 				<div className="space-y-1">
 					<h2 className="flex items-center gap-2 font-semibold text-2xl tracking-tight">
 						<UsersRound className="size-6 text-primary" />
-						Users
+						{panelT("Users")}
 					</h2>
 					<p className="text-muted-foreground text-sm">
-						Manage dashboard users, administrator access, suspensions, and
-						active sessions.
+						{panelT(
+							"Manage dashboard users, administrator access, suspensions, and active sessions.",
+						)}
 					</p>
 				</div>
 			</div>
@@ -432,18 +460,19 @@ function UsersPage() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<UserPlus className="size-5" />
-							Invite user
+							{panelT("Invite user")}
 						</CardTitle>
 						<CardDescription>
-							Generate a one-time invite link and assign the user's initial
-							role.
+							{panelT(
+								"Generate a one-time invite link and assign the user's initial role.",
+							)}
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="grid gap-3 lg:grid-cols-[1fr_240px_auto]">
 							<Input
 								type="email"
-								placeholder="teammate@example.com"
+								placeholder={panelT("teammate@example.com")}
 								value={inviteEmail}
 								onChange={(event) => setInviteEmail(event.target.value)}
 							/>
@@ -462,7 +491,9 @@ function UsersPage() {
 								disabled={inviteDisabled}
 								onClick={createInviteLink}
 							>
-								{createInvite.isPending ? "Creating..." : "Create invite"}
+								{createInvite.isPending
+									? panelT("Creating...")
+									: panelT("Create invite")}
 							</Button>
 						</div>
 
@@ -475,7 +506,7 @@ function UsersPage() {
 									onClick={copyInviteLink}
 								>
 									<Copy className="size-4" />
-									Copy
+									{panelT("Copy")}
 								</Button>
 							</div>
 						)}
@@ -485,12 +516,14 @@ function UsersPage() {
 								<Table>
 									<TableHeader>
 										<TableRow>
-											<TableHead>Email</TableHead>
-											<TableHead>Role</TableHead>
-											<TableHead>Status</TableHead>
-											<TableHead>Email delivery</TableHead>
-											<TableHead>Expires</TableHead>
-											<TableHead className="text-right">Actions</TableHead>
+											<TableHead>{panelT("Email")}</TableHead>
+											<TableHead>{panelT("Role")}</TableHead>
+											<TableHead>{panelT("Status")}</TableHead>
+											<TableHead>{panelT("Email delivery")}</TableHead>
+											<TableHead>{panelT("Expires")}</TableHead>
+											<TableHead className="text-right">
+												{panelT("Actions")}
+											</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
@@ -499,15 +532,21 @@ function UsersPage() {
 												<TableCell>{invite.email}</TableCell>
 												<TableCell>{invite.roleName}</TableCell>
 												<TableCell>
-													<Badge variant="outline">{invite.status}</Badge>
+													<Badge variant="outline">
+														{panelT(invite.status)}
+													</Badge>
 												</TableCell>
 												<TableCell>
 													{invite.emailSentAt ? (
-														<Badge variant="secondary">Sent</Badge>
+														<Badge variant="secondary">{panelT("Sent")}</Badge>
 													) : invite.emailError ? (
-														<Badge variant="destructive">Failed</Badge>
+														<Badge variant="destructive">
+															{panelT("Failed")}
+														</Badge>
 													) : (
-														<Badge variant="outline">Not sent</Badge>
+														<Badge variant="outline">
+															{panelT("Not sent")}
+														</Badge>
 													)}
 												</TableCell>
 												<TableCell className="text-muted-foreground text-sm">
@@ -526,7 +565,7 @@ function UsersPage() {
 															revokeInvite.mutate({ inviteId: invite.id })
 														}
 													>
-														Revoke
+														{panelT("Revoke")}
 													</Button>
 												</TableCell>
 											</TableRow>
@@ -544,18 +583,19 @@ function UsersPage() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<UsersRound className="size-5" />
-							Tenant members
+							{panelT("Tenant members")}
 						</CardTitle>
 						<CardDescription>
-							Invite collaborators and manage membership for your personal
-							workspace. Only tenant owners can make these changes.
+							{panelT(
+								"Invite collaborators and manage membership for your personal workspace. Only tenant owners can make these changes.",
+							)}
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="grid gap-3 sm:grid-cols-[1fr_auto]">
 							<Input
 								type="email"
-								placeholder="teammate@example.com"
+								placeholder={panelT("teammate@example.com")}
 								value={tenantInviteEmail}
 								onChange={(event) => setTenantInviteEmail(event.target.value)}
 							/>
@@ -564,7 +604,9 @@ function UsersPage() {
 								disabled={tenantInviteDisabled}
 								onClick={createTenantInviteLink}
 							>
-								{createTenantInvite.isPending ? "Creating..." : "Invite member"}
+								{createTenantInvite.isPending
+									? panelT("Creating...")
+									: panelT("Invite member")}
 							</Button>
 						</div>
 
@@ -579,7 +621,7 @@ function UsersPage() {
 									onClick={copyTenantInviteLink}
 								>
 									<Copy className="size-4" />
-									Copy
+									{panelT("Copy")}
 								</Button>
 							</div>
 						)}
@@ -588,10 +630,12 @@ function UsersPage() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Member</TableHead>
-										<TableHead>Role</TableHead>
-										<TableHead>Joined</TableHead>
-										<TableHead className="text-right">Actions</TableHead>
+										<TableHead>{panelT("Member")}</TableHead>
+										<TableHead>{panelT("Role")}</TableHead>
+										<TableHead>{panelT("Joined")}</TableHead>
+										<TableHead className="text-right">
+											{panelT("Actions")}
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -606,10 +650,10 @@ function UsersPage() {
 													</Avatar>
 													<div className="min-w-0">
 														<p className="truncate font-medium">
-															{member.name || "Unnamed user"}
+															{member.name || panelT("Unnamed user")}
 															{member.id === session?.user.id && (
 																<span className="ml-2 text-muted-foreground text-xs">
-																	You
+																	{panelT("You")}
 																</span>
 															)}
 														</p>
@@ -625,7 +669,7 @@ function UsersPage() {
 														member.role === "owner" ? "default" : "secondary"
 													}
 												>
-													{member.role}
+													{panelT(member.role)}
 												</Badge>
 											</TableCell>
 											<TableCell className="text-muted-foreground text-sm">
@@ -643,7 +687,7 @@ function UsersPage() {
 													onClick={() => setMemberToRemove(member)}
 												>
 													<Trash2 className="size-4" />
-													Remove
+													{panelT("Remove")}
 												</Button>
 											</TableCell>
 										</TableRow>
@@ -654,15 +698,19 @@ function UsersPage() {
 
 						{pendingTenantInvites.length > 0 && (
 							<div className="space-y-2">
-								<p className="font-medium text-sm">Pending invitations</p>
+								<p className="font-medium text-sm">
+									{panelT("Pending invitations")}
+								</p>
 								<div className="rounded-lg border">
 									<Table>
 										<TableHeader>
 											<TableRow>
-												<TableHead>Email</TableHead>
-												<TableHead>Sent</TableHead>
-												<TableHead>Expires</TableHead>
-												<TableHead className="text-right">Actions</TableHead>
+												<TableHead>{panelT("Email")}</TableHead>
+												<TableHead>{panelT("Sent")}</TableHead>
+												<TableHead>{panelT("Expires")}</TableHead>
+												<TableHead className="text-right">
+													{panelT("Actions")}
+												</TableHead>
 											</TableRow>
 										</TableHeader>
 										<TableBody>
@@ -671,11 +719,17 @@ function UsersPage() {
 													<TableCell>{invite.email}</TableCell>
 													<TableCell>
 														{invite.emailSentAt ? (
-															<Badge variant="secondary">Sent</Badge>
+															<Badge variant="secondary">
+																{panelT("Sent")}
+															</Badge>
 														) : invite.emailError ? (
-															<Badge variant="destructive">Failed</Badge>
+															<Badge variant="destructive">
+																{panelT("Failed")}
+															</Badge>
 														) : (
-															<Badge variant="outline">Not sent</Badge>
+															<Badge variant="outline">
+																{panelT("Not sent")}
+															</Badge>
 														)}
 													</TableCell>
 													<TableCell className="text-muted-foreground text-sm">
@@ -695,7 +749,7 @@ function UsersPage() {
 																});
 															}}
 														>
-															Revoke
+															{panelT("Revoke")}
 														</Button>
 													</TableCell>
 												</TableRow>
@@ -713,18 +767,19 @@ function UsersPage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<UserCog className="size-5" />
-						User management
+						{panelT("User management")}
 					</CardTitle>
 					<CardDescription>
-						Role and suspension changes are audit logged. Destructive account
-						deletion is intentionally not available here.
+						{panelT(
+							"Role and suspension changes are audit logged. Destructive account deletion is intentionally not available here.",
+						)}
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 						<Input
 							className="lg:max-w-sm"
-							placeholder="Search by name or email"
+							placeholder={panelT("Search by name or email")}
 							value={query}
 							onChange={(event) => setQuery(event.target.value)}
 						/>
@@ -733,9 +788,15 @@ function UsersPage() {
 								value={role}
 								onChange={(event) => setRole(event.target.value as RoleFilter)}
 							>
-								<NativeSelectOption value="all">All roles</NativeSelectOption>
-								<NativeSelectOption value="admin">Admins</NativeSelectOption>
-								<NativeSelectOption value="member">Members</NativeSelectOption>
+								<NativeSelectOption value="all">
+									{panelT("All roles")}
+								</NativeSelectOption>
+								<NativeSelectOption value="admin">
+									{panelT("Admins")}
+								</NativeSelectOption>
+								<NativeSelectOption value="member">
+									{panelT("Members")}
+								</NativeSelectOption>
 							</NativeSelect>
 							<NativeSelect
 								value={status}
@@ -744,11 +805,13 @@ function UsersPage() {
 								}
 							>
 								<NativeSelectOption value="all">
-									All statuses
+									{panelT("All statuses")}
 								</NativeSelectOption>
-								<NativeSelectOption value="active">Active</NativeSelectOption>
+								<NativeSelectOption value="active">
+									{panelT("Active")}
+								</NativeSelectOption>
 								<NativeSelectOption value="suspended">
-									Suspended
+									{panelT("Suspended")}
 								</NativeSelectOption>
 							</NativeSelect>
 						</div>
@@ -765,14 +828,16 @@ function UsersPage() {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>User</TableHead>
-										<TableHead>Role</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Email</TableHead>
-										<TableHead>Sessions</TableHead>
-										<TableHead>Accounts</TableHead>
-										<TableHead>Created</TableHead>
-										<TableHead className="text-right">Actions</TableHead>
+										<TableHead>{panelT("User")}</TableHead>
+										<TableHead>{panelT("Role")}</TableHead>
+										<TableHead>{panelT("Status")}</TableHead>
+										<TableHead>{panelT("Email")}</TableHead>
+										<TableHead>{panelT("Sessions")}</TableHead>
+										<TableHead>{panelT("Accounts")}</TableHead>
+										<TableHead>{panelT("Created")}</TableHead>
+										<TableHead className="text-right">
+											{panelT("Actions")}
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -787,10 +852,10 @@ function UsersPage() {
 													</Avatar>
 													<div className="min-w-0">
 														<p className="truncate font-medium">
-															{user.name || "Unnamed user"}
+															{user.name || panelT("Unnamed user")}
 															{user.isCurrentUser && (
 																<span className="ml-2 text-muted-foreground text-xs">
-																	You
+																	{panelT("You")}
 																</span>
 															)}
 														</p>
@@ -802,17 +867,17 @@ function UsersPage() {
 											</TableCell>
 											<TableCell>
 												<Badge variant={roleBadgeVariant(user.role)}>
-													{user.role}
+													{panelT(user.role)}
 												</Badge>
 											</TableCell>
 											<TableCell>
 												<div className="space-y-1">
 													<Badge variant={statusBadgeVariant(user.status)}>
-														{user.status}
+														{panelT(user.status)}
 													</Badge>
 													{user.suspendedAt && (
 														<p className="text-muted-foreground text-xs">
-															Since{" "}
+															{panelT("Since")}{" "}
 															{new Date(user.suspendedAt).toLocaleDateString()}
 														</p>
 													)}
@@ -820,9 +885,13 @@ function UsersPage() {
 											</TableCell>
 											<TableCell>
 												{user.emailVerified ? (
-													<Badge variant="secondary">Verified</Badge>
+													<Badge variant="secondary">
+														{panelT("Verified")}
+													</Badge>
 												) : (
-													<Badge variant="outline">Unverified</Badge>
+													<Badge variant="outline">
+														{panelT("Unverified")}
+													</Badge>
 												)}
 											</TableCell>
 											<TableCell>{user.sessionCount}</TableCell>
@@ -856,7 +925,7 @@ function UsersPage() {
 																	})
 																}
 															>
-																Demote to member
+																{panelT("Demote to member")}
 															</DropdownMenuItem>
 														) : (
 															<DropdownMenuItem
@@ -869,7 +938,7 @@ function UsersPage() {
 																	})
 																}
 															>
-																Promote to admin
+																{panelT("Promote to admin")}
 															</DropdownMenuItem>
 														)}
 														<DropdownMenuItem
@@ -882,7 +951,7 @@ function UsersPage() {
 																})
 															}
 														>
-															Revoke sessions
+															{panelT("Revoke sessions")}
 														</DropdownMenuItem>
 														{user.status === "suspended" ? (
 															<DropdownMenuItem
@@ -894,7 +963,7 @@ function UsersPage() {
 																	})
 																}
 															>
-																Reactivate
+																{panelT("Reactivate")}
 															</DropdownMenuItem>
 														) : (
 															<DropdownMenuItem
@@ -907,7 +976,7 @@ function UsersPage() {
 																	})
 																}
 															>
-																Suspend
+																{panelT("Suspend")}
 															</DropdownMenuItem>
 														)}
 													</DropdownMenuContent>
@@ -919,7 +988,7 @@ function UsersPage() {
 										<TableRow>
 											<TableCell colSpan={8}>
 												<div className="py-8 text-center text-muted-foreground text-sm">
-													No users match the current filters.
+													{panelT("No users match the current filters.")}
 												</div>
 											</TableCell>
 										</TableRow>
@@ -930,8 +999,10 @@ function UsersPage() {
 					)}
 
 					<div className="flex items-center justify-between text-muted-foreground text-xs">
-						<span>{usersQuery.data?.total ?? 0} total users</span>
-						<span>Showing up to 50 users</span>
+						<span>
+							{usersQuery.data?.total ?? 0} {panelT("total users")}
+						</span>
+						<span>{panelT("Showing up to 50 users")}</span>
 					</div>
 				</CardContent>
 			</Card>
@@ -940,25 +1011,30 @@ function UsersPage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<ShieldCheck className="size-5" />
-						Production safety notes
+						{panelT("Production safety notes")}
 					</CardTitle>
 					<CardDescription>
-						User management now favors reversible controls with audit evidence.
+						{panelT(
+							"User management now favors reversible controls with audit evidence.",
+						)}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<ul className="list-disc space-y-2 pl-5 text-muted-foreground text-sm">
 						<li>
-							User deletion is disabled because auth and product data may
-							cascade.
+							{panelT(
+								"User deletion is disabled because auth and product data may cascade.",
+							)}
 						</li>
 						<li>
-							Suspension revokes sessions and blocks protected tRPC plus
-							authenticated server routes.
+							{panelT(
+								"Suspension revokes sessions and blocks protected tRPC plus authenticated server routes.",
+							)}
 						</li>
 						<li>
-							Role changes, session revocations, suspensions, and reactivations
-							are written to the immutable audit log.
+							{panelT(
+								"Role changes, session revocations, suspensions, and reactivations are written to the immutable audit log.",
+							)}
 						</li>
 					</ul>
 				</CardContent>
@@ -974,16 +1050,20 @@ function UsersPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Remove tenant member?</AlertDialogTitle>
+						<AlertDialogTitle>
+							{panelT("Remove tenant member?")}
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{memberToRemove
 								? `${memberToRemove.name || memberToRemove.email} will lose access to this tenant's shared resources.`
-								: "This member will lose access to this tenant's shared resources."}
+								: panelT(
+										"This member will lose access to this tenant's shared resources.",
+									)}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={removeTenantMember.isPending}>
-							Cancel
+							{panelT("Cancel")}
 						</AlertDialogCancel>
 						<AlertDialogAction
 							disabled={
@@ -997,7 +1077,9 @@ function UsersPage() {
 								});
 							}}
 						>
-							{removeTenantMember.isPending ? "Removing..." : "Remove"}
+							{removeTenantMember.isPending
+								? panelT("Removing...")
+								: panelT("Remove")}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
@@ -1014,9 +1096,11 @@ function UsersPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>{actionTitle(pendingAction)}</AlertDialogTitle>
+						<AlertDialogTitle>
+							{panelT(actionTitle(pendingAction))}
+						</AlertDialogTitle>
 						<AlertDialogDescription>
-							{actionDescription(pendingAction)}
+							{actionDescription(pendingAction, panelT)}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					{(pendingAction?.type === "suspend" ||
@@ -1024,8 +1108,8 @@ function UsersPage() {
 						<Textarea
 							placeholder={
 								pendingAction.type === "suspend"
-									? "Reason for suspension"
-									: "Optional reason for reactivation"
+									? panelT("Reason for suspension")
+									: panelT("Optional reason for reactivation")
 							}
 							value={reason}
 							onChange={(event) => setReason(event.target.value)}
@@ -1034,13 +1118,13 @@ function UsersPage() {
 					)}
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={actionPending}>
-							Cancel
+							{panelT("Cancel")}
 						</AlertDialogCancel>
 						<AlertDialogAction
 							disabled={confirmDisabled}
 							onClick={confirmAction}
 						>
-							{actionPending ? "Working..." : "Confirm"}
+							{actionPending ? panelT("Working...") : panelT("Confirm")}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

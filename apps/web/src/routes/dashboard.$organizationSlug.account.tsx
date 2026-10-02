@@ -12,6 +12,7 @@ import {
 } from "@whatsapp-flow/ui/components/card";
 import { Skeleton } from "@whatsapp-flow/ui/components/skeleton";
 import { LogOut, Mail, ShieldCheck, UserCircle } from "lucide-react";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
@@ -52,17 +53,21 @@ function getDateField(source: unknown, key: string) {
 }
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
+	const panelT = usePanelTranslation();
+
 	return (
 		<div className="flex items-start justify-between gap-4 border-b py-3 last:border-b-0">
 			<span className="text-muted-foreground text-sm">{label}</span>
 			<span className="max-w-[65%] break-all text-right font-medium text-sm">
-				{value || "Not available"}
+				{value || panelT("Not available")}
 			</span>
 		</div>
 	);
 }
 
 function AccountPage() {
+	const panelT = usePanelTranslation();
+
 	const navigate = useNavigate();
 	const trpc = useTRPC();
 	const { data: session, isPending } = authClient.useSession();
@@ -94,10 +99,12 @@ function AccountPage() {
 				<div className="space-y-1">
 					<h2 className="flex items-center gap-2 font-semibold text-2xl tracking-tight">
 						<UserCircle className="size-6 text-primary" />
-						Account
+						{panelT("Account")}
 					</h2>
 					<p className="text-muted-foreground text-sm">
-						Review the account currently signed in to this dashboard.
+						{panelT(
+							"Review the account currently signed in to this dashboard.",
+						)}
 					</p>
 				</div>
 				<Button
@@ -111,16 +118,16 @@ function AccountPage() {
 					}}
 				>
 					<LogOut />
-					Sign out
+					{panelT("Sign out")}
 				</Button>
 			</div>
 
 			<div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
 				<Card>
 					<CardHeader>
-						<CardTitle>Profile</CardTitle>
+						<CardTitle>{panelT("Profile")}</CardTitle>
 						<CardDescription>
-							Basic identity from the active session.
+							{panelT("Basic identity from the active session.")}
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-5">
@@ -130,19 +137,19 @@ function AccountPage() {
 							</Avatar>
 							<div className="min-w-0">
 								<p className="truncate font-semibold text-lg">
-									{user?.name || "Unnamed account"}
+									{user?.name || panelT("Unnamed account")}
 								</p>
 								<p className="truncate text-muted-foreground text-sm">
-									{user?.email || "No email on session"}
+									{user?.email || panelT("No email on session")}
 								</p>
 							</div>
 						</div>
 
 						<div className="rounded-lg border px-4">
-							<DetailRow label="Name" value={user?.name} />
-							<DetailRow label="Email" value={user?.email} />
-							<DetailRow label="User ID" value={user?.id} />
-							<DetailRow label="Role" value={role} />
+							<DetailRow label={panelT("Name")} value={user?.name} />
+							<DetailRow label={panelT("Email")} value={user?.email} />
+							<DetailRow label={panelT("User ID")} value={user?.id} />
+							<DetailRow label={panelT("Role")} value={role} />
 						</div>
 					</CardContent>
 				</Card>
@@ -151,35 +158,36 @@ function AccountPage() {
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<ShieldCheck className="size-5 text-primary" />
-							Security
+							{panelT("Security")}
 						</CardTitle>
 						<CardDescription>
-							Sign-in and support details for this workspace.
+							{panelT("Sign-in and support details for this workspace.")}
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="rounded-lg border px-4">
 							<div className="flex items-center justify-between gap-4 border-b py-3">
 								<span className="text-muted-foreground text-sm">
-									Email status
+									{panelT("Email status")}
 								</span>
 								{emailVerified == null ? (
-									<Badge variant="secondary">Unknown</Badge>
+									<Badge variant="secondary">{panelT("Unknown")}</Badge>
 								) : emailVerified ? (
-									<Badge>Verified</Badge>
+									<Badge>{panelT("Verified")}</Badge>
 								) : (
-									<Badge variant="destructive">Unverified</Badge>
+									<Badge variant="destructive">{panelT("Unverified")}</Badge>
 								)}
 							</div>
 							<DetailRow
-								label="Created"
+								label={panelT("Created")}
 								value={createdAt?.toLocaleDateString()}
 							/>
 						</div>
 
 						<p className="rounded-lg border bg-muted/30 p-3 text-muted-foreground text-sm leading-6">
-							OAuth and OIDC sign-in methods are configured by workspace admins
-							in Dashboard Settings.
+							{panelT(
+								"OAuth and OIDC sign-in methods are configured by workspace admins in Dashboard Settings.",
+							)}
 						</p>
 
 						{supportEmail && (
@@ -189,7 +197,7 @@ function AccountPage() {
 								render={<a href={`mailto:${supportEmail}`} />}
 							>
 								<Mail />
-								Contact support
+								{panelT("Contact support")}
 							</Button>
 						)}
 					</CardContent>

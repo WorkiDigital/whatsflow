@@ -26,6 +26,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useInboxSSE } from "@/hooks/use-inbox-sse";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/inbox")({
@@ -158,6 +159,8 @@ function getTemplateSummary(raw: unknown) {
 }
 
 function MessageContent({ message }: { message: MessageContentInput }) {
+	const panelT = usePanelTranslation();
+
 	const media = getMessageMedia(message.raw);
 	const mediaUrl = media?.storage?.url ?? media?.url;
 	const templateSummary = getTemplateSummary(message.raw);
@@ -166,7 +169,7 @@ function MessageContent({ message }: { message: MessageContentInput }) {
 			<div className="space-y-1">
 				<img
 					src={mediaUrl}
-					alt={media?.fileName ?? "WhatsApp image"}
+					alt={media?.fileName ?? panelT("WhatsApp image")}
 					className="max-h-64 rounded-lg object-cover"
 				/>
 				{message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
@@ -198,13 +201,15 @@ function MessageContent({ message }: { message: MessageContentInput }) {
 				rel="noreferrer"
 				className="font-medium underline underline-offset-2"
 			>
-				{media?.fileName ?? message.text ?? "Download document"}
+				{media?.fileName ?? message.text ?? panelT("Download document")}
 			</a>
 		);
 	}
 	return (
 		<p className="whitespace-pre-wrap leading-relaxed">
-			{templateSummary ?? message.text ?? `[${message.messageType}]`}
+			{templateSummary ??
+				message.text ??
+				panelT("[{v0}]", { v0: message.messageType })}
 		</p>
 	);
 }
@@ -218,6 +223,8 @@ function ThreadList({
 	selectedId: string | null;
 	onSelect: (id: string) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const [search, setSearch] = useState("");
 
 	const filtered = useMemo(() => {
@@ -239,9 +246,11 @@ function ThreadList({
 			<div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
 				<MessageSquare className="size-10 text-muted-foreground/40" />
 				<div>
-					<p className="font-medium text-sm">No conversations yet</p>
+					<p className="font-medium text-sm">
+						{panelT("No conversations yet")}
+					</p>
 					<p className="text-muted-foreground text-xs">
-						Incoming WhatsApp messages will appear here.
+						{panelT("Incoming WhatsApp messages will appear here.")}
 					</p>
 				</div>
 			</div>
@@ -253,19 +262,19 @@ function ThreadList({
 			<div className="space-y-3 border-b p-4">
 				<div className="flex items-center justify-between gap-3">
 					<div>
-						<p className="font-semibold text-sm">Conversations</p>
+						<p className="font-semibold text-sm">{panelT("Conversations")}</p>
 						<p className="text-muted-foreground text-xs">
-							{threads.length} active threads
+							{threads.length} {panelT("active threads")}
 						</p>
 					</div>
 					<Badge variant="secondary" className="h-5 px-2 text-[10px]">
-						Live
+						{panelT("Live")}
 					</Badge>
 				</div>
 				<div className="relative">
 					<Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
 					<Input
-						placeholder="Search conversations..."
+						placeholder={panelT("Search conversations...")}
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 						className="h-8 pl-8 text-xs"
@@ -300,7 +309,7 @@ function ThreadList({
 								</span>
 								<span className="flex items-center justify-between gap-2">
 									<span className="truncate text-muted-foreground">
-										{thread.lastMessageText ?? "No messages"}
+										{thread.lastMessageText ?? panelT("No messages")}
 									</span>
 									{thread.unreadCount > 0 && (
 										<Badge className="h-4 min-w-4 px-1 text-[9px]">
@@ -318,6 +327,8 @@ function ThreadList({
 }
 
 function ThreadHeader({ thread }: { thread: ThreadRow }) {
+	const panelT = usePanelTranslation();
+
 	return (
 		<div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4">
 			<div className="flex min-w-0 items-center gap-3">
@@ -333,7 +344,11 @@ function ThreadHeader({ thread }: { thread: ThreadRow }) {
 					</p>
 				</div>
 			</div>
-			<Button variant="ghost" size="icon-sm" aria-label="Thread actions">
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				aria-label={panelT("Thread actions")}
+			>
 				<MoreHorizontal className="size-4" />
 			</Button>
 		</div>
@@ -341,6 +356,8 @@ function ThreadHeader({ thread }: { thread: ThreadRow }) {
 }
 
 function ThreadView({ thread }: { thread: ThreadRow }) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const { data: messages } = useSuspenseQuery(
 		trpc.inbox.messages.queryOptions({ threadId: thread.id }),
@@ -362,9 +379,9 @@ function ThreadView({ thread }: { thread: ThreadRow }) {
 			<div className="flex flex-1 items-center justify-center p-8 text-center">
 				<div>
 					<MessageSquare className="mx-auto mb-3 size-10 text-muted-foreground/30" />
-					<p className="font-medium text-sm">No messages yet</p>
+					<p className="font-medium text-sm">{panelT("No messages yet")}</p>
 					<p className="text-muted-foreground text-xs">
-						This thread is ready for the first message.
+						{panelT("This thread is ready for the first message.")}
 					</p>
 				</div>
 			</div>
@@ -405,7 +422,7 @@ function ThreadView({ thread }: { thread: ThreadRow }) {
 									{deliveryStatus && (
 										<span className="inline-flex items-center gap-1">
 											<CheckCheck className="size-3" />
-											{deliveryStatus}
+											{panelT(deliveryStatus)}
 										</span>
 									)}
 								</div>
@@ -424,6 +441,8 @@ function ThreadView({ thread }: { thread: ThreadRow }) {
 }
 
 function ThreadDetails({ thread }: { thread: ThreadRow }) {
+	const panelT = usePanelTranslation();
+
 	const ChatIcon =
 		thread.chatType === "group"
 			? UsersRound
@@ -448,7 +467,7 @@ function ThreadDetails({ thread }: { thread: ThreadRow }) {
 	return (
 		<Card className="h-full rounded-none border-0 bg-card/80 py-0 ring-0">
 			<CardHeader className="border-b px-4 py-4">
-				<CardTitle className="text-sm">Thread details</CardTitle>
+				<CardTitle className="text-sm">{panelT("Thread details")}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4 p-4">
 				<div className="flex flex-col items-center rounded-xl border bg-background p-4 text-center">
@@ -457,7 +476,8 @@ function ThreadDetails({ thread }: { thread: ThreadRow }) {
 					</div>
 					<p className="font-semibold text-sm">{getThreadTitle(thread)}</p>
 					<p className="text-muted-foreground text-xs">
-						WhatsApp {getThreadTypeLabel(thread.chatType).toLowerCase()}
+						{panelT("WhatsApp")}{" "}
+						{panelT(panelT(getThreadTypeLabel(thread.chatType)).toLowerCase())}
 					</p>
 				</div>
 
@@ -484,7 +504,7 @@ function ThreadDetails({ thread }: { thread: ThreadRow }) {
 					className="w-full justify-start text-xs"
 				>
 					<CheckCheck className="size-3.5" />
-					Marked as read
+					{panelT("Marked as read")}
 				</Button>
 			</CardContent>
 		</Card>
@@ -492,15 +512,19 @@ function ThreadDetails({ thread }: { thread: ThreadRow }) {
 }
 
 function EmptyThread() {
+	const panelT = usePanelTranslation();
+
 	return (
 		<div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
 			<div className="flex size-12 items-center justify-center rounded-2xl border bg-muted">
 				<MessageSquare className="size-6 text-muted-foreground/50" />
 			</div>
 			<div>
-				<p className="font-medium text-sm">Select a conversation</p>
+				<p className="font-medium text-sm">{panelT("Select a conversation")}</p>
 				<p className="max-w-xs text-muted-foreground text-xs">
-					Open a thread to read messages and inspect contact metadata.
+					{panelT(
+						"Open a thread to read messages and inspect contact metadata.",
+					)}
 				</p>
 			</div>
 		</div>
@@ -508,6 +532,8 @@ function EmptyThread() {
 }
 
 function InboxPage() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const { thread: threadFromUrl } = Route.useSearch();
 	const { data: threads } = useSuspenseQuery(trpc.inbox.list.queryOptions({}));
@@ -530,26 +556,28 @@ function InboxPage() {
 			<div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background px-4 md:px-5">
 				<div>
 					<div className="flex items-center gap-2">
-						<h1 className="font-semibold text-sm">Inbox</h1>
+						<h1 className="font-semibold text-sm">{panelT("Inbox")}</h1>
 						<Badge variant="outline" className="h-5 px-2 text-[10px]">
 							{typedThreads.reduce(
 								(total, thread) => total + thread.unreadCount,
 								0,
 							)}{" "}
-							unread
+							{panelT("unread")}
 						</Badge>
 					</div>
 					<p className="text-muted-foreground text-xs">
-						Monitor WhatsApp conversations captured from connected devices.
+						{panelT(
+							"Monitor WhatsApp conversations captured from connected devices.",
+						)}
 					</p>
 				</div>
 				<Tabs defaultValue="all">
 					<TabsList className="hidden h-8 md:inline-flex">
 						<TabsTrigger value="all" className="px-3 text-xs">
-							All
+							{panelT("All")}
 						</TabsTrigger>
 						<TabsTrigger value="unread" className="px-3 text-xs">
-							Unread
+							{panelT("Unread")}
 						</TabsTrigger>
 					</TabsList>
 				</Tabs>
@@ -584,7 +612,7 @@ function InboxPage() {
 						<ThreadDetails thread={selectedThread} />
 					) : (
 						<div className="flex h-full items-center justify-center p-6 text-center text-muted-foreground text-xs">
-							Contact details appear after selecting a thread.
+							{panelT("Contact details appear after selecting a thread.")}
 						</div>
 					)}
 				</div>

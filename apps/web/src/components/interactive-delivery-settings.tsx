@@ -1,7 +1,10 @@
 import { Button } from "@whatsapp-flow/ui/components/button";
 import { Input } from "@whatsapp-flow/ui/components/input";
 import { useId } from "react";
-import { useI18n } from "@/i18n/provider";
+import {
+	useI18n,
+	useTranslation as usePanelTranslation,
+} from "@/i18n/provider";
 import type { FlowNodeData, InteractiveNodeData } from "./flow-nodes";
 
 const copy = {
@@ -56,6 +59,8 @@ export function InteractiveDeliverySettings({
 	data: InteractiveNodeData;
 	onUpdate: (data: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const { locale } = useI18n();
 	const imageId = useId();
 	const listId = useId();
@@ -114,7 +119,7 @@ export function InteractiveDeliverySettings({
 								}
 							/>
 							<Input
-								aria-label={`URL ${index + 1}`}
+								aria-label={panelT("URL {v0}", { v0: index + 1 })}
 								placeholder="https://…"
 								className="h-7 text-xs"
 								value={button.url}

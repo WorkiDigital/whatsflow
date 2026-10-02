@@ -4,6 +4,7 @@ import { buttonVariants } from "@whatsapp-flow/ui/components/button";
 import { Skeleton } from "@whatsapp-flow/ui/components/skeleton";
 import { cn } from "@whatsapp-flow/ui/lib/utils";
 import { Bot } from "lucide-react";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
@@ -69,6 +70,8 @@ export default function Header() {
 }
 
 function HeaderAuthButton() {
+	const panelT = usePanelTranslation();
+
 	const { data: session, isPending } = authClient.useSession();
 
 	if (isPending) {
@@ -78,7 +81,7 @@ function HeaderAuthButton() {
 	if (session) {
 		return (
 			<Link to="/dashboard" className={cn(buttonVariants({ size: "sm" }))}>
-				Dashboard
+				{panelT("Dashboard")}
 			</Link>
 		);
 	}
@@ -88,7 +91,7 @@ function HeaderAuthButton() {
 			to="/login"
 			className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
 		>
-			Sign in
+			{panelT("Sign in")}
 		</Link>
 	);
 }

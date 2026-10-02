@@ -20,8 +20,8 @@ import {
 	MessageSquare,
 	Smartphone,
 } from "lucide-react";
-
 import Header from "@/components/header";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
 
@@ -53,6 +53,8 @@ const features = [
 const steps = ["Connect a device", "Create a flow", "Deploy triggers"];
 
 function HomeComponent() {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 	const { data: session, isPending } = authClient.useSession();
@@ -67,15 +69,18 @@ function HomeComponent() {
 							<div className="space-y-4">
 								<Badge variant="outline" className="px-2 py-1">
 									<Bot className="size-3" />
-									WhatsApp automation builder
+									{panelT("WhatsApp automation builder")}
 								</Badge>
 								<div className="space-y-3">
 									<h1 className="max-w-3xl font-semibold text-4xl tracking-tight md:text-6xl">
-										Build and monitor WhatsApp bot flows from one dashboard.
+										{panelT(
+											"Build and monitor WhatsApp bot flows from one dashboard.",
+										)}
 									</h1>
 									<p className="max-w-2xl text-base text-muted-foreground leading-7">
-										Connect devices, design visual automations, and inspect
-										runtime activity with a clean shadcn-style workspace.
+										{panelT(
+											"Connect devices, design visual automations, and inspect runtime activity with a clean shadcn-style workspace.",
+										)}
 									</p>
 								</div>
 							</div>
@@ -88,7 +93,7 @@ function HomeComponent() {
 										to="/dashboard"
 										className={cn(buttonVariants({ size: "lg" }))}
 									>
-										Go to dashboard
+										{panelT("Go to dashboard")}
 										<ArrowRight className="size-4" />
 									</Link>
 								) : (
@@ -96,7 +101,7 @@ function HomeComponent() {
 										to="/login"
 										className={cn(buttonVariants({ size: "lg" }))}
 									>
-										Sign in
+										{panelT("Sign in")}
 										<ArrowRight className="size-4" />
 									</Link>
 								)}
@@ -106,7 +111,7 @@ function HomeComponent() {
 										buttonVariants({ variant: "outline", size: "lg" }),
 									)}
 								>
-									View features
+									{panelT("View features")}
 								</a>
 							</div>
 
@@ -124,10 +129,12 @@ function HomeComponent() {
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base">
 									<MessageSquare className="size-4 text-primary" />
-									Workspace preview
+									{panelT("Workspace preview")}
 								</CardTitle>
 								<CardDescription>
-									A compact flow from incoming message to automated response.
+									{panelT(
+										"A compact flow from incoming message to automated response.",
+									)}
 								</CardDescription>
 							</CardHeader>
 							<CardContent className="space-y-4">
@@ -146,12 +153,14 @@ function HomeComponent() {
 								</div>
 								<div className="flex items-center justify-between border bg-background px-3 py-2">
 									<div>
-										<p className="font-medium text-sm">API connection</p>
+										<p className="font-medium text-sm">
+											{panelT("API connection")}
+										</p>
 										{healthCheck.isLoading ? (
 											<Skeleton className="mt-2 h-3 w-36" />
 										) : (
 											<p className="text-muted-foreground text-xs">
-												{healthCheck.data || "No response"}
+												{healthCheck.data || panelT("No response")}
 											</p>
 										)}
 									</div>
@@ -170,11 +179,12 @@ function HomeComponent() {
 				<section id="features" className="mx-auto max-w-6xl px-4 py-14 md:px-6">
 					<div className="mb-8 max-w-2xl space-y-2">
 						<h2 className="font-semibold text-3xl tracking-tight">
-							A practical bot workspace
+							{panelT("A practical bot workspace")}
 						</h2>
 						<p className="text-muted-foreground text-sm leading-6">
-							The dashboard keeps device management, flow design, and monitoring
-							in one place.
+							{panelT(
+								"The dashboard keeps device management, flow design, and monitoring in one place.",
+							)}
 						</p>
 					</div>
 					<div className="grid gap-4 md:grid-cols-3">
@@ -196,11 +206,12 @@ function HomeComponent() {
 					<div className="mx-auto grid max-w-6xl gap-6 px-4 py-14 md:grid-cols-[0.8fr_1.2fr] md:items-center md:px-6">
 						<div className="space-y-2">
 							<h2 className="font-semibold text-3xl tracking-tight">
-								From message to response
+								{panelT("From message to response")}
 							</h2>
 							<p className="text-muted-foreground text-sm leading-6">
-								Flows start from a trigger, can wait for a contact reply, and
-								finish by sending WhatsApp messages from the connected device.
+								{panelT(
+									"Flows start from a trigger, can wait for a contact reply, and finish by sending WhatsApp messages from the connected device.",
+								)}
 							</p>
 						</div>
 						<div className="grid gap-3 sm:grid-cols-3">

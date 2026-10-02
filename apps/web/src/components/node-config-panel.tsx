@@ -50,6 +50,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useActiveOrganization } from "@/components/active-organization";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 import { ContactCombobox } from "./contact-combobox";
 import type {
@@ -128,6 +129,8 @@ function TriggerKeywordConfig({
 	data: TriggerNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const [inputValue, setInputValue] = useState("");
 	const keywords = useMemo(() => getTriggerKeywords(data), [data]);
 
@@ -152,7 +155,7 @@ function TriggerKeywordConfig({
 	);
 
 	return (
-		<Field label="Keywords">
+		<Field label={panelT("Keywords")}>
 			<div className="flex min-h-20 flex-col gap-2 rounded-md border bg-background p-2">
 				{keywords.length > 0 && (
 					<div className="flex flex-wrap gap-1.5">
@@ -168,7 +171,7 @@ function TriggerKeywordConfig({
 									onClick={() =>
 										commitKeywords(keywords.filter((item) => item !== keyword))
 									}
-									aria-label={`Remove ${keyword}`}
+									aria-label={panelT("Remove {v0}", { v0: keyword })}
 								>
 									<X className="size-3" />
 								</button>
@@ -178,7 +181,7 @@ function TriggerKeywordConfig({
 				)}
 				<Input
 					className="h-7 border-0 px-0 text-xs shadow-none focus-visible:ring-0"
-					placeholder="Type keyword, then Enter"
+					placeholder={panelT("Type keyword, then Enter")}
 					value={inputValue}
 					onBlur={() => addInputKeywords(inputValue)}
 					onChange={(e) => setInputValue(e.target.value)}
@@ -196,8 +199,9 @@ function TriggerKeywordConfig({
 				/>
 			</div>
 			<span className="text-[10px] text-muted-foreground">
-				Example: keyword “order” will match “Saya mau ORDER sekarang”.
-				Uppercase/lowercase does not matter.
+				{panelT(
+					"Example: keyword “order” will match “Saya mau ORDER sekarang”. Uppercase/lowercase does not matter.",
+				)}
 			</span>
 		</Field>
 	);
@@ -210,6 +214,8 @@ function TriggerWebhookConfig({
 	flowId: string;
 	canRotateWebhookToken: boolean;
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [transientToken, setTransientToken] = useState<string | null>(null);
@@ -218,26 +224,28 @@ function TriggerWebhookConfig({
 			onSuccess: ({ token }) => {
 				setTransientToken(token);
 				toast.success(
-					"Webhook token rotated. Copy it now; it will not be shown again.",
+					panelT(
+						"Webhook token rotated. Copy it now; it will not be shown again.",
+					),
 				);
 			},
-			onError: () => toast.error("Failed to rotate webhook token"),
+			onError: () => toast.error(panelT("Failed to rotate webhook token")),
 		}),
 	);
 	const endpoint = `/api/flows/${flowId}/webhook?token=${transientToken ?? "WEBHOOK_TOKEN"}`;
 	const copyEndpoint = async () => {
 		await navigator.clipboard.writeText(endpoint);
-		toast.success("Webhook endpoint copied");
+		toast.success(panelT("Webhook endpoint copied"));
 	};
 	const copyToken = async () => {
 		if (!transientToken) return;
 		await navigator.clipboard.writeText(transientToken);
-		toast.success("Webhook token copied");
+		toast.success(panelT("Webhook token copied"));
 	};
 
 	return (
 		<div className="flex flex-col gap-2">
-			<Field label="Webhook Endpoint">
+			<Field label={panelT("Webhook Endpoint")}>
 				<div className="flex gap-1">
 					<Input className="h-7 text-xs" readOnly value={endpoint} />
 					<Button
@@ -250,13 +258,13 @@ function TriggerWebhookConfig({
 					</Button>
 				</div>
 			</Field>
-			<Field label="Secret Token">
+			<Field label={panelT("Secret Token")}>
 				<div className="flex gap-1">
 					<Input
 						className="h-7 text-xs"
 						readOnly
 						value={transientToken ?? ""}
-						placeholder="Generate a token to reveal it once"
+						placeholder={panelT("Generate a token to reveal it once")}
 					/>
 					{transientToken && (
 						<Button
@@ -288,11 +296,13 @@ function TriggerWebhookConfig({
 			</Field>
 			{!canRotateWebhookToken && (
 				<p className="text-[10px] text-muted-foreground">
-					Only the flow owner can rotate the webhook token.
+					{panelT("Only the flow owner can rotate the webhook token.")}
 				</p>
 			)}
 			<p className="text-[10px] text-muted-foreground">
-				Send POST JSON with contactNumber and optional text/message fields.
+				{panelT(
+					"Send POST JSON with contactNumber and optional text/message fields.",
+				)}
 			</p>
 		</div>
 	);
@@ -305,9 +315,11 @@ function TriggerScheduleConfig({
 	data: TriggerNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	return (
 		<>
-			<Field label="Cron Expression">
+			<Field label={panelT("Cron Expression")}>
 				<Input
 					className="h-7 text-xs"
 					placeholder="*/5 * * * *"
@@ -315,11 +327,12 @@ function TriggerScheduleConfig({
 					onChange={(e) => onUpdate({ cronExpression: e.target.value })}
 				/>
 				<p className="text-[10px] text-muted-foreground">
-					Use 5 fields: minute hour day month weekday. Supports *, lists,
-					ranges, and steps.
+					{panelT(
+						"Use 5 fields: minute hour day month weekday. Supports *, lists, ranges, and steps.",
+					)}
 				</p>
 			</Field>
-			<Field label="Recipient Number">
+			<Field label={panelT("Recipient Number")}>
 				<Input
 					className="h-7 text-xs"
 					placeholder="6281234567890"
@@ -340,6 +353,8 @@ function TriggerTagSelector({
 	selectedIds: string[];
 	onChange: (ids: string[]) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const { data: tags = [] } = useSuspenseQuery(
 		trpc.contact.listTags.queryOptions(),
@@ -376,12 +391,12 @@ function TriggerTagSelector({
 						}
 					>
 						<Plus className="size-2.5" />
-						Add tag
+						{panelT("Add tag")}
 					</PopoverTrigger>
 					<PopoverContent className="w-52 p-1" align="start">
 						{tags.length === 0 ? (
 							<p className="p-2 text-[10px] text-muted-foreground">
-								Create tags from the Contacts table first.
+								{panelT("Create tags from the Contacts table first.")}
 							</p>
 						) : (
 							tags.map((tag) => {
@@ -420,10 +435,12 @@ function TriggerChatScopeConfig({
 	data: TriggerNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const chatScope = data.chatScope ?? "any";
 	return (
 		<>
-			<Field label="Chat scope">
+			<Field label={panelT("Chat scope")}>
 				<Select
 					value={chatScope}
 					onValueChange={(value) =>
@@ -434,21 +451,21 @@ function TriggerChatScopeConfig({
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="any">Any chat</SelectItem>
-						<SelectItem value="private">Private chats</SelectItem>
-						<SelectItem value="groups">Groups</SelectItem>
+						<SelectItem value="any">{panelT("Any chat")}</SelectItem>
+						<SelectItem value="private">{panelT("Private chats")}</SelectItem>
+						<SelectItem value="groups">{panelT("Groups")}</SelectItem>
 					</SelectContent>
 				</Select>
 			</Field>
 			{chatScope === "groups" && (
 				<TriggerTagSelector
-					label="Group must have any tag"
+					label={panelT("Group must have any tag")}
 					selectedIds={data.groupTagIds ?? []}
 					onChange={(groupTagIds) => onUpdate({ groupTagIds })}
 				/>
 			)}
 			<TriggerTagSelector
-				label="Sender must have any tag"
+				label={panelT("Sender must have any tag")}
 				selectedIds={data.senderTagIds ?? []}
 				onChange={(senderTagIds) => onUpdate({ senderTagIds })}
 			/>
@@ -541,6 +558,8 @@ function SendTextConfig({
 	edges?: Edge[];
 	currentNodeId?: string;
 }) {
+	const panelT = usePanelTranslation();
+
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const [showVars, setShowVars] = useState(false);
 	const [varQuery, setVarQuery] = useState("");
@@ -603,12 +622,14 @@ function SendTextConfig({
 	});
 
 	return (
-		<Field label="Text Message">
+		<Field label={panelT("Text Message")}>
 			<div className="relative">
 				<Textarea
 					ref={textareaRef}
 					className="min-h-[64px] text-xs"
-					placeholder="e.g. Hi! How can I help?\n\nUse {{variable}} to insert a value."
+					placeholder={panelT(
+						"e.g. Hi! How can I help?\\n\\nUse {{variable}} to insert a value.",
+					)}
 					value={data.text ?? ""}
 					onChange={handleChange}
 				/>
@@ -630,7 +651,7 @@ function SendTextConfig({
 							/>
 						}
 					>
-						Variables
+						{panelT("Variables")}
 					</PopoverTrigger>
 					<PopoverContent
 						className="w-56 p-0"
@@ -640,14 +661,14 @@ function SendTextConfig({
 					>
 						<Command>
 							<CommandInput
-								placeholder="Search variables..."
+								placeholder={panelT("Search variables...")}
 								value={varQuery}
 								onValueChange={setVarQuery}
 								className="h-8 text-xs"
 							/>
 							<CommandList>
 								<CommandEmpty className="py-3 text-center text-muted-foreground text-xs">
-									No variables found
+									{panelT("No variables found")}
 								</CommandEmpty>
 								<CommandGroup heading="Available Variables">
 									{filteredVars.map((v) => {
@@ -659,9 +680,13 @@ function SendTextConfig({
 												className="flex flex-col items-start gap-0.5 text-xs"
 												onSelect={() => insertVariable(v)}
 											>
-												<span>{meta.label}</span>
+												<span>
+													{v === "contact.number" || v === "message.text"
+														? panelT(meta.label)
+														: meta.label}
+												</span>
 												<span className="text-[10px] text-muted-foreground">
-													{meta.description} · {`{{${v}}}`}
+													{panelT(meta.description)} · {`{{${v}}}`}
 												</span>
 											</CommandItem>
 										);
@@ -673,7 +698,8 @@ function SendTextConfig({
 				</Popover>
 			</div>
 			<p className="text-[10px] text-muted-foreground">
-				Use {"{{variable}}"} to insert values from context.
+				{panelT("Use")} {"{{variable}}"}{" "}
+				{panelT("to insert values from context.")}
 			</p>
 		</Field>
 	);
@@ -686,6 +712,8 @@ function MediaConfig({
 	data: MessageNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const nodeType = data.nodeType;
 	const accept =
 		nodeType === "send-image"
@@ -695,10 +723,10 @@ function MediaConfig({
 				: "audio/*";
 	return (
 		<>
-			<Field label="Media">
+			<Field label={panelT("Media")}>
 				<MediaUpload
 					accept={accept}
-					label="Upload or paste URL"
+					label={panelT("Upload or paste URL")}
 					value={data.mediaUrl ?? ""}
 					onUploaded={(m) =>
 						onUpdate({ mediaUrl: m.url, caption: data.caption })
@@ -706,10 +734,10 @@ function MediaConfig({
 					onUrlChange={(url) => onUpdate({ mediaUrl: url })}
 				/>
 			</Field>
-			<Field label="Caption (optional)">
+			<Field label={panelT("Caption (optional)")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="Optional caption"
+					placeholder={panelT("Optional caption")}
 					value={data.caption ?? ""}
 					onChange={(e) => onUpdate({ caption: e.target.value })}
 				/>
@@ -725,12 +753,14 @@ function DocumentConfig({
 	data: MessageNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	return (
 		<>
-			<Field label="Document">
+			<Field label={panelT("Document")}>
 				<MediaUpload
 					accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,application/*,text/*"
-					label="Upload or paste URL"
+					label={panelT("Upload or paste URL")}
 					value={data.mediaUrl ?? ""}
 					onUploaded={(m) =>
 						onUpdate({ mediaUrl: m.url, fileName: m.fileName })
@@ -738,10 +768,10 @@ function DocumentConfig({
 					onUrlChange={(url) => onUpdate({ mediaUrl: url })}
 				/>
 			</Field>
-			<Field label="File Name">
+			<Field label={panelT("File Name")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="document.pdf"
+					placeholder={panelT("document.pdf")}
 					value={data.fileName ?? ""}
 					onChange={(e) => onUpdate({ fileName: e.target.value })}
 				/>
@@ -860,6 +890,8 @@ function LocationConfig({
 	data: MessageNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const latitudeValid =
 		data.latitude === undefined || isValidLatitude(data.latitude);
 	const longitudeValid =
@@ -904,7 +936,7 @@ function LocationConfig({
 	return (
 		<>
 			<div className="grid grid-cols-2 gap-2">
-				<Field label="Latitude">
+				<Field label={panelT("Latitude")}>
 					<Input
 						className="h-7 text-xs"
 						type="number"
@@ -918,11 +950,11 @@ function LocationConfig({
 					/>
 					{!latitudeValid && (
 						<span className="text-[10px] text-destructive">
-							Latitude must be between -90 and 90.
+							{panelT("Latitude must be between -90 and 90.")}
 						</span>
 					)}
 				</Field>
-				<Field label="Longitude">
+				<Field label={panelT("Longitude")}>
 					<Input
 						className="h-7 text-xs"
 						type="number"
@@ -936,12 +968,12 @@ function LocationConfig({
 					/>
 					{!longitudeValid && (
 						<span className="text-[10px] text-destructive">
-							Longitude must be between -180 and 180.
+							{panelT("Longitude must be between -180 and 180.")}
 						</span>
 					)}
 				</Field>
 			</div>
-			<Field label="Map">
+			<Field label={panelT("Map")}>
 				<div className="flex justify-end">
 					<Button
 						type="button"
@@ -952,7 +984,9 @@ function LocationConfig({
 						disabled={locationLoading}
 					>
 						<Locate className="size-3" />
-						{locationLoading ? "Detecting..." : "Use my location"}
+						{locationLoading
+							? panelT("Detecting...")
+							: panelT("Use my location")}
 					</Button>
 				</div>
 				<LocationMapPicker
@@ -961,21 +995,25 @@ function LocationConfig({
 					onSelect={updateCoordinates}
 				/>
 				<span className="text-[10px] text-muted-foreground">
-					Click the map, drag the marker, or use your current location.
+					{panelT(
+						"Click the map, drag the marker, or use your current location.",
+					)}
 				</span>
 				{isNullIsland(data.latitude, data.longitude) && (
 					<span className="text-[10px] text-muted-foreground">
-						Coordinates 0,0 are shown zoomed out so the map does not look blank.
+						{panelT(
+							"Coordinates 0,0 are shown zoomed out so the map does not look blank.",
+						)}
 					</span>
 				)}
 				{locationError && (
 					<span className="text-[10px] text-destructive">{locationError}</span>
 				)}
 			</Field>
-			<Field label="Address (optional)">
+			<Field label={panelT("Address (optional)")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="123 Main St"
+					placeholder={panelT("123 Main St")}
 					value={data.address ?? ""}
 					onChange={(e) => onUpdate({ address: e.target.value })}
 				/>
@@ -991,6 +1029,8 @@ function ReactionConfig({
 	data: MessageNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const [pickerOpen, setPickerOpen] = useState(false);
 
 	const handleEmojiSelect = useCallback(
@@ -1002,7 +1042,7 @@ function ReactionConfig({
 	);
 
 	return (
-		<Field label="Emoji">
+		<Field label={panelT("Emoji")}>
 			<Popover open={pickerOpen} onOpenChange={setPickerOpen}>
 				<PopoverTrigger
 					render={
@@ -1020,7 +1060,7 @@ function ReactionConfig({
 						<Smile className="size-3.5 text-muted-foreground" />
 					)}
 					<span className={data.emoji ? "" : "text-muted-foreground"}>
-						{data.emoji ? "Selected emoji" : "Select emoji"}
+						{data.emoji ? panelT("Selected emoji") : panelT("Select emoji")}
 					</span>
 				</PopoverTrigger>
 				<PopoverContent className="h-80 w-72 p-0" align="start">
@@ -1028,7 +1068,7 @@ function ReactionConfig({
 						className="h-full"
 						onEmojiSelect={(e) => handleEmojiSelect(e.emoji)}
 					>
-						<EmojiPickerSearch placeholder="Search emoji..." />
+						<EmojiPickerSearch placeholder={panelT("Search emoji...")} />
 						<EmojiPickerContent />
 						<EmojiPickerFooter />
 					</EmojiPicker>
@@ -1045,6 +1085,8 @@ function TemplateConfig({
 	data: MessageNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const params = data.templateBodyParams ?? [];
 	const addParam = () => onUpdate({ templateBodyParams: [...params, ""] });
 	const removeParam = (index: number) =>
@@ -1057,18 +1099,18 @@ function TemplateConfig({
 
 	return (
 		<>
-			<Field label="Template Name">
+			<Field label={panelT("Template Name")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="hello_world"
+					placeholder={panelT("hello_world")}
 					value={data.templateName ?? ""}
 					onChange={(e) => onUpdate({ templateName: e.target.value })}
 				/>
 			</Field>
-			<Field label="Language Code">
+			<Field label={panelT("Language Code")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="en_US"
+					placeholder={panelT("en_US")}
 					value={data.languageCode ?? "en_US"}
 					onChange={(e) => onUpdate({ languageCode: e.target.value })}
 				/>
@@ -1076,7 +1118,7 @@ function TemplateConfig({
 			<div className="flex flex-col gap-1.5">
 				<div className="flex items-center justify-between">
 					<span className="text-[10px] text-muted-foreground">
-						Body parameters
+						{panelT("Body parameters")}
 					</span>
 					<Button
 						type="button"
@@ -1091,7 +1133,7 @@ function TemplateConfig({
 					<div key={index} className="flex items-center gap-1">
 						<Input
 							className="h-7 flex-1 text-xs"
-							placeholder={`Parameter ${index + 1}`}
+							placeholder={panelT("Parameter {v0}", { v0: index + 1 })}
 							value={param}
 							onChange={(e) => updateParam(index, e.target.value)}
 						/>
@@ -1108,8 +1150,10 @@ function TemplateConfig({
 				))}
 			</div>
 			<p className="text-[10px] text-muted-foreground">
-				Templates must already be approved in Meta Business Manager. Use
-				{"{{variable}}"} syntax in parameters to insert flow values.
+				{panelT(
+					"Templates must already be approved in Meta Business Manager. Use",
+				)}
+				{"{{variable}}"} {panelT("syntax in parameters to insert flow values.")}
 			</p>
 		</>
 	);
@@ -1122,6 +1166,8 @@ function InteractiveButtonsConfig({
 	data: InteractiveNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const addButton = () => {
 		const buttons = [...(data.buttons ?? [])];
 		buttons.push({ id: `btn_${globalThis.crypto.randomUUID()}`, text: "" });
@@ -1141,18 +1187,18 @@ function InteractiveButtonsConfig({
 	return (
 		<>
 			<InteractiveDeliverySettings data={data} onUpdate={onUpdate} />
-			<Field label="Message Body">
+			<Field label={panelT("Message Body")}>
 				<Textarea
 					className="min-h-[64px] text-xs"
-					placeholder="Main message"
+					placeholder={panelT("Main message")}
 					value={data.bodyText ?? ""}
 					onChange={(e) => onUpdate({ bodyText: e.target.value })}
 				/>
 			</Field>
-			<Field label="Footer (optional)">
+			<Field label={panelT("Footer (optional)")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="Footer text"
+					placeholder={panelT("Footer text")}
 					value={data.footerText ?? ""}
 					onChange={(e) => onUpdate({ footerText: e.target.value })}
 				/>
@@ -1160,7 +1206,8 @@ function InteractiveButtonsConfig({
 			<div className="flex flex-col gap-1">
 				<div className="flex items-center justify-between">
 					<span className="text-[10px] text-muted-foreground">
-						Buttons ({(data.buttons ?? []).length}/3)
+						{panelT("Buttons (")}
+						{(data.buttons ?? []).length}/3)
 					</span>
 					{(data.buttons ?? []).length + (data.urlButtons ?? []).length < 3 && (
 						<Button
@@ -1177,7 +1224,7 @@ function InteractiveButtonsConfig({
 					<div key={btn.id} className="flex items-center gap-1">
 						<Input
 							className="h-7 flex-1 text-xs"
-							placeholder={`Button ${i + 1}`}
+							placeholder={panelT("Button {v0}", { v0: i + 1 })}
 							value={btn.text}
 							onChange={(e) => updateButton(i, e.target.value)}
 						/>
@@ -1209,6 +1256,8 @@ function InteractiveListConfig({
 	data: InteractiveNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const addSection = () => {
 		const sections = [...(data.sections ?? [])];
 		sections.push({ title: "", rows: [] });
@@ -1252,25 +1301,27 @@ function InteractiveListConfig({
 	return (
 		<>
 			<InteractiveDeliverySettings data={data} onUpdate={onUpdate} />
-			<Field label="Message Body">
+			<Field label={panelT("Message Body")}>
 				<Textarea
 					className="min-h-[64px] text-xs"
-					placeholder="Main message"
+					placeholder={panelT("Main message")}
 					value={data.bodyText ?? ""}
 					onChange={(e) => onUpdate({ bodyText: e.target.value })}
 				/>
 			</Field>
-			<Field label="Footer (optional)">
+			<Field label={panelT("Footer (optional)")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="Footer text"
+					placeholder={panelT("Footer text")}
 					value={data.footerText ?? ""}
 					onChange={(e) => onUpdate({ footerText: e.target.value })}
 				/>
 			</Field>
 			<div className="flex flex-col gap-1.5">
 				<div className="flex items-center justify-between">
-					<span className="text-[10px] text-muted-foreground">Sections</span>
+					<span className="text-[10px] text-muted-foreground">
+						{panelT("Sections")}
+					</span>
 					<Button
 						type="button"
 						variant="ghost"
@@ -1285,7 +1336,7 @@ function InteractiveListConfig({
 						<div className="flex items-center gap-1">
 							<Input
 								className="h-7 flex-1 text-[10px]"
-								placeholder="Section title"
+								placeholder={panelT("Section title")}
 								value={section.title}
 								onChange={(e) => updateSectionTitle(si, e.target.value)}
 							/>
@@ -1304,7 +1355,7 @@ function InteractiveListConfig({
 								<div className="flex items-center gap-1">
 									<Input
 										className="h-6 flex-1 text-[10px]"
-										placeholder="Row title"
+										placeholder={panelT("Row title")}
 										value={row.title}
 										onChange={(e) => updateRow(si, ri, "title", e.target.value)}
 									/>
@@ -1320,7 +1371,7 @@ function InteractiveListConfig({
 								</div>
 								<Input
 									className="h-6 text-[10px]"
-									placeholder="Description (optional)"
+									placeholder={panelT("Description (optional)")}
 									value={row.description ?? ""}
 									onChange={(e) =>
 										updateRow(si, ri, "description", e.target.value)
@@ -1335,7 +1386,7 @@ function InteractiveListConfig({
 							className="h-6 w-fit gap-1 px-1.5 text-[10px]"
 							onClick={() => addRow(si)}
 						>
-							<Plus className="size-2.5" /> Row
+							<Plus className="size-2.5" /> {panelT("Row")}
 						</Button>
 					</div>
 				))}
@@ -1356,6 +1407,8 @@ function InteractiveQuickReplyConfig({
 	data: InteractiveNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const addButton = () => {
 		const buttons = [...(data.buttons ?? [])];
 		buttons.push({ id: `btn_${globalThis.crypto.randomUUID()}`, text: "" });
@@ -1375,17 +1428,19 @@ function InteractiveQuickReplyConfig({
 	return (
 		<>
 			<InteractiveDeliverySettings data={data} onUpdate={onUpdate} />
-			<Field label="Prompt Text">
+			<Field label={panelT("Prompt Text")}>
 				<Textarea
 					className="min-h-[64px] text-xs"
-					placeholder="Choose an option..."
+					placeholder={panelT("Choose an option...")}
 					value={data.bodyText ?? ""}
 					onChange={(e) => onUpdate({ bodyText: e.target.value })}
 				/>
 			</Field>
 			<div className="flex flex-col gap-1">
 				<div className="flex items-center justify-between">
-					<span className="text-[10px] text-muted-foreground">Options</span>
+					<span className="text-[10px] text-muted-foreground">
+						{panelT("Options")}
+					</span>
 					<Button
 						type="button"
 						variant="ghost"
@@ -1403,7 +1458,7 @@ function InteractiveQuickReplyConfig({
 					<div key={btn.id} className="flex items-center gap-1">
 						<Input
 							className="h-7 flex-1 text-xs"
-							placeholder={`Option ${i + 1}`}
+							placeholder={panelT("Option {v0}", { v0: i + 1 })}
 							value={btn.text}
 							onChange={(e) => updateButton(i, e.target.value)}
 						/>
@@ -1439,6 +1494,8 @@ function PollConfig({
 	data: InteractiveNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const options = data.options ?? [];
 	const trimmedLabels = options.map((option) => option.text.trim());
 	const duplicateLabels = new Set(
@@ -1466,24 +1523,25 @@ function PollConfig({
 
 	return (
 		<>
-			<Field label="Question">
+			<Field label={panelT("Question")}>
 				<Textarea
 					className="min-h-16 text-xs"
 					maxLength={255}
-					placeholder="Ask a question..."
+					placeholder={panelT("Ask a question...")}
 					value={data.question ?? ""}
 					onChange={(event) => onUpdate({ question: event.target.value })}
 				/>
 				{!data.question?.trim() && (
 					<p className="text-[10px] text-destructive">
-						Question cannot be empty.
+						{panelT("Question cannot be empty.")}
 					</p>
 				)}
 				<p className="text-[10px] text-muted-foreground">
-					{data.question?.length ?? 0}/255 characters
+					{data.question?.length ?? 0}
+					{panelT("/255 characters")}
 				</p>
 			</Field>
-			<Field label={`Options (${options.length}/12)`}>
+			<Field label={panelT("Options ({v0}/12)", { v0: options.length })}>
 				<div className="flex flex-col gap-1.5">
 					{options.map((option, index) => {
 						const trimmedLabel = option.text.trim();
@@ -1494,7 +1552,7 @@ function PollConfig({
 									<Input
 										className="h-7 flex-1 text-xs"
 										maxLength={100}
-										placeholder={`Option ${index + 1}`}
+										placeholder={panelT("Option {v0}", { v0: index + 1 })}
 										value={option.text}
 										onChange={(event) =>
 											updateOption(index, event.target.value)
@@ -1506,7 +1564,9 @@ function PollConfig({
 										size="icon-xs"
 										disabled={index === 0}
 										onClick={() => moveOption(index, -1)}
-										aria-label={`Move option ${index + 1} up`}
+										aria-label={panelT("Move option {v0} up", {
+											v0: index + 1,
+										})}
 									>
 										↑
 									</Button>
@@ -1516,7 +1576,9 @@ function PollConfig({
 										size="icon-xs"
 										disabled={index === options.length - 1}
 										onClick={() => moveOption(index, 1)}
-										aria-label={`Move option ${index + 1} down`}
+										aria-label={panelT("Move option {v0} down", {
+											v0: index + 1,
+										})}
 									>
 										↓
 									</Button>
@@ -1531,7 +1593,9 @@ function PollConfig({
 													options.filter((item) => item.id !== option.id),
 												)
 											}
-											aria-label={`Remove option ${index + 1}`}
+											aria-label={panelT("Remove option {v0}", {
+												v0: index + 1,
+											})}
 										>
 											<X className="size-3" />
 										</Button>
@@ -1539,12 +1603,12 @@ function PollConfig({
 								</div>
 								{!trimmedLabel && (
 									<p className="text-[10px] text-destructive">
-										Option cannot be empty.
+										{panelT("Option cannot be empty.")}
 									</p>
 								)}
 								{isDuplicate && (
 									<p className="text-[10px] text-destructive">
-										Option labels must be unique.
+										{panelT("Option labels must be unique.")}
 									</p>
 								)}
 							</div>
@@ -1564,7 +1628,7 @@ function PollConfig({
 							}
 						>
 							<Plus className="size-3.5" />
-							Add option
+							{panelT("Add option")}
 						</Button>
 					)}
 				</div>
@@ -1591,11 +1655,13 @@ function ConditionConfig({
 	edges?: Edge[];
 	currentNodeId?: string;
 }) {
+	const panelT = usePanelTranslation();
+
 	const flowVars = getFlowVariables(allNodes, edges, currentNodeId);
 
 	return (
 		<>
-			<Field label="Field">
+			<Field label={panelT("Field")}>
 				<Select
 					value={data.field ?? "message.text"}
 					onValueChange={(value) => {
@@ -1603,21 +1669,23 @@ function ConditionConfig({
 					}}
 				>
 					<SelectTrigger className="h-7 w-full text-xs" size="sm">
-						<SelectValue placeholder="Select variable" />
+						<SelectValue placeholder={panelT("Select variable")} />
 					</SelectTrigger>
 					<SelectContent>
 						{flowVars.map((variable) => {
 							const meta = getVariableMeta(variable);
 							return (
 								<SelectItem key={variable} value={variable}>
-									{meta.label}
+									{variable === "contact.number" || variable === "message.text"
+										? panelT(meta.label)
+										: meta.label}
 								</SelectItem>
 							);
 						})}
 					</SelectContent>
 				</Select>
 			</Field>
-			<Field label="Operator">
+			<Field label={panelT("Operator")}>
 				<Select
 					value={data.operator ?? "contains"}
 					onValueChange={(value) =>
@@ -1628,17 +1696,17 @@ function ConditionConfig({
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="equals">equals</SelectItem>
-						<SelectItem value="contains">contains</SelectItem>
-						<SelectItem value="starts-with">starts with</SelectItem>
-						<SelectItem value="regex">regex</SelectItem>
+						<SelectItem value="equals">{panelT("equals")}</SelectItem>
+						<SelectItem value="contains">{panelT("contains")}</SelectItem>
+						<SelectItem value="starts-with">{panelT("starts with")}</SelectItem>
+						<SelectItem value="regex">{panelT("regex")}</SelectItem>
 					</SelectContent>
 				</Select>
 			</Field>
-			<Field label="Value">
+			<Field label={panelT("Value")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="Value to match"
+					placeholder={panelT("Value to match")}
 					value={data.value ?? ""}
 					onChange={(e) => onUpdate({ value: e.target.value })}
 				/>
@@ -1654,8 +1722,10 @@ function DelayConfig({
 	data: LogicNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	return (
-		<Field label="Delay (seconds)">
+		<Field label={panelT("Delay (seconds)")}>
 			<Input
 				className="h-7 text-xs"
 				type="number"
@@ -1676,20 +1746,22 @@ function SetVariableConfig({
 	data: LogicNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	return (
 		<>
-			<Field label="Variable Name">
+			<Field label={panelT("Variable Name")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="myVar"
+					placeholder={panelT("myVar")}
 					value={data.variableName ?? ""}
 					onChange={(e) => onUpdate({ variableName: e.target.value })}
 				/>
 			</Field>
-			<Field label="Value">
+			<Field label={panelT("Value")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="Value"
+					placeholder={panelT("Value")}
 					value={data.variableValue ?? ""}
 					onChange={(e) => onUpdate({ variableValue: e.target.value })}
 				/>
@@ -1714,6 +1786,8 @@ function ReplyWaitSettings({
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 	description: string;
 }) {
+	const panelT = usePanelTranslation();
+
 	const timeoutMinutes = data.timeoutMinutes ?? 1440;
 	const warnings = data.replyWarnings ?? [];
 	const updateWarnings = useCallback(
@@ -1725,7 +1799,7 @@ function ReplyWaitSettings({
 
 	return (
 		<>
-			<Field label="Timeout (minutes)">
+			<Field label={panelT("Timeout (minutes)")}>
 				<Input
 					className="h-7 text-xs"
 					min={1}
@@ -1740,7 +1814,7 @@ function ReplyWaitSettings({
 				/>
 				<p className="text-[10px] text-muted-foreground">{description}</p>
 			</Field>
-			<Field label="Warnings before timeout">
+			<Field label={panelT("Warnings before timeout")}>
 				<div className="flex flex-col gap-2">
 					{warnings.map((warning, index) => {
 						const invalidTime =
@@ -1770,7 +1844,7 @@ function ReplyWaitSettings({
 										}}
 									/>
 									<span className="whitespace-nowrap text-[10px] text-muted-foreground">
-										minutes after waiting
+										{panelT("minutes after waiting")}
 									</span>
 									<Button
 										type="button"
@@ -1788,7 +1862,9 @@ function ReplyWaitSettings({
 								</div>
 								<Textarea
 									className="min-h-16 text-xs"
-									placeholder="Still there? Please reply before this session expires."
+									placeholder={panelT(
+										"Still there? Please reply before this session expires.",
+									)}
 									value={warning.message}
 									onChange={(e) => {
 										const nextWarnings = [...warnings];
@@ -1802,8 +1878,8 @@ function ReplyWaitSettings({
 								{(invalidTime || invalidMessage) && (
 									<p className="text-[10px] text-destructive">
 										{invalidTime
-											? "Warning time must be before the timeout."
-											: "Warning message cannot be empty."}
+											? panelT("Warning time must be before the timeout.")
+											: panelT("Warning message cannot be empty.")}
 									</p>
 								)}
 							</div>
@@ -1826,11 +1902,11 @@ function ReplyWaitSettings({
 						}
 					>
 						<Plus className="size-3.5" />
-						Add warning
+						{panelT("Add warning")}
 					</Button>
 				</div>
 				<p className="text-[10px] text-muted-foreground">
-					Warnings only send if the user has not replied yet.
+					{panelT("Warnings only send if the user has not replied yet.")}
 				</p>
 			</Field>
 		</>
@@ -1844,12 +1920,14 @@ function WaitForReplyConfig({
 	data: LogicNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	return (
 		<>
-			<Field label="Variable Name">
+			<Field label={panelT("Variable Name")}>
 				<Input
 					className="h-7 text-xs"
-					placeholder="reply"
+					placeholder={panelT("reply")}
 					value={data.variableName ?? "reply"}
 					onChange={(e) => onUpdate({ variableName: e.target.value })}
 				/>
@@ -1870,19 +1948,21 @@ function ForwardConfig({
 	data: ActionNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const forwardData = data as ActionNodeData & { messageTemplate?: string };
 
 	return (
 		<>
-			<Field label="Forward To">
+			<Field label={panelT("Forward To")}>
 				<ContactCombobox
 					value={data.targetNumber ?? ""}
 					onChange={(jid) => onUpdate({ targetNumber: jid })}
 					includeGroups={false}
-					placeholder="Select contact..."
+					placeholder={panelT("Select contact...")}
 				/>
 			</Field>
-			<Field label="Or enter number manually">
+			<Field label={panelT("Or enter number manually")}>
 				<Input
 					className="h-7 text-xs"
 					placeholder="6281234567890"
@@ -1890,10 +1970,10 @@ function ForwardConfig({
 					onChange={(e) => onUpdate({ targetNumber: e.target.value })}
 				/>
 			</Field>
-			<Field label="Message Template (optional)">
+			<Field label={panelT("Message Template (optional)")}>
 				<Textarea
 					className="min-h-[48px] text-xs"
-					placeholder="Leave empty to forward the original message"
+					placeholder={panelT("Leave empty to forward the original message")}
 					value={forwardData.messageTemplate ?? ""}
 					onChange={(e) =>
 						onUpdate({
@@ -1938,6 +2018,8 @@ function WebhookCallConfig({
 	data: ActionNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const auth = getWebhookAuth(data.webhookAuth);
 	const headers = getWebhookHeaders(data.webhookHeaders);
 	const updateHeader = (index: number, patch: Partial<WebhookHeader>) => {
@@ -1951,7 +2033,7 @@ function WebhookCallConfig({
 
 	return (
 		<>
-			<Field label="Method">
+			<Field label={panelT("Method")}>
 				<Select
 					value={data.webhookMethod ?? "POST"}
 					onValueChange={(value) =>
@@ -1964,13 +2046,13 @@ function WebhookCallConfig({
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="GET">GET</SelectItem>
-						<SelectItem value="POST">POST</SelectItem>
-						<SelectItem value="PUT">PUT</SelectItem>
+						<SelectItem value="GET">{panelT("GET")}</SelectItem>
+						<SelectItem value="POST">{panelT("POST")}</SelectItem>
+						<SelectItem value="PUT">{panelT("PUT")}</SelectItem>
 					</SelectContent>
 				</Select>
 			</Field>
-			<Field label="URL">
+			<Field label={panelT("URL")}>
 				<Input
 					className="h-7 text-xs"
 					placeholder="https://..."
@@ -1978,7 +2060,7 @@ function WebhookCallConfig({
 					onChange={(e) => onUpdate({ webhookUrl: e.target.value })}
 				/>
 			</Field>
-			<Field label="Authentication">
+			<Field label={panelT("Authentication")}>
 				<div className="flex flex-col gap-2">
 					<Select
 						value={auth.type}
@@ -1995,17 +2077,19 @@ function WebhookCallConfig({
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="none">None</SelectItem>
-							<SelectItem value="bearer">Bearer token</SelectItem>
-							<SelectItem value="basic">Basic auth</SelectItem>
-							<SelectItem value="api_key">API key</SelectItem>
+							<SelectItem value="none">{panelT("None")}</SelectItem>
+							<SelectItem value="bearer">{panelT("Bearer token")}</SelectItem>
+							<SelectItem value="basic">{panelT("Basic auth")}</SelectItem>
+							<SelectItem value="api_key">{panelT("API key")}</SelectItem>
 						</SelectContent>
 					</Select>
 					{auth.type === "bearer" && (
 						<Input
 							className="h-7 text-xs"
 							placeholder={
-								auth.hasSecret ? "Stored token unchanged" : "Bearer token"
+								auth.hasSecret
+									? panelT("Stored token unchanged")
+									: panelT("Bearer token")
 							}
 							type="password"
 							value={auth.secretValue ?? ""}
@@ -2018,7 +2102,7 @@ function WebhookCallConfig({
 						<div className="grid grid-cols-2 gap-2">
 							<Input
 								className="h-7 text-xs"
-								placeholder="Username"
+								placeholder={panelT("Username")}
 								value={auth.username ?? ""}
 								onChange={(e) =>
 									updateAuth({ ...auth, username: e.target.value })
@@ -2027,7 +2111,9 @@ function WebhookCallConfig({
 							<Input
 								className="h-7 text-xs"
 								placeholder={
-									auth.hasSecret ? "Stored password unchanged" : "Password"
+									auth.hasSecret
+										? panelT("Stored password unchanged")
+										: panelT("Password")
 								}
 								type="password"
 								value={auth.secretValue ?? ""}
@@ -2041,7 +2127,7 @@ function WebhookCallConfig({
 						<div className="grid grid-cols-2 gap-2">
 							<Input
 								className="h-7 text-xs"
-								placeholder="X-API-Key"
+								placeholder={panelT("X-API-Key")}
 								value={auth.apiKeyName ?? ""}
 								onChange={(e) =>
 									updateAuth({ ...auth, apiKeyName: e.target.value })
@@ -2050,7 +2136,9 @@ function WebhookCallConfig({
 							<Input
 								className="h-7 text-xs"
 								placeholder={
-									auth.hasSecret ? "Stored key unchanged" : "API key value"
+									auth.hasSecret
+										? panelT("Stored key unchanged")
+										: panelT("API key value")
 								}
 								type="password"
 								value={auth.secretValue ?? ""}
@@ -2061,24 +2149,25 @@ function WebhookCallConfig({
 						</div>
 					)}
 					<p className="text-[10px] text-muted-foreground">
-						Auth secrets are encrypted on save. Use custom headers only for
-						non-secret values.
+						{panelT(
+							"Auth secrets are encrypted on save. Use custom headers only for non-secret values.",
+						)}
 					</p>
 				</div>
 			</Field>
-			<Field label="Custom headers">
+			<Field label={panelT("Custom headers")}>
 				<div className="flex flex-col gap-2">
 					{headers.map((header, index) => (
 						<div key={header.id} className="flex items-center gap-2">
 							<Input
 								className="h-7 text-xs"
-								placeholder="Header"
+								placeholder={panelT("Header")}
 								value={header.key}
 								onChange={(e) => updateHeader(index, { key: e.target.value })}
 							/>
 							<Input
 								className="h-7 text-xs"
-								placeholder="Value"
+								placeholder={panelT("Value")}
 								value={header.value}
 								onChange={(e) => updateHeader(index, { value: e.target.value })}
 							/>
@@ -2114,7 +2203,7 @@ function WebhookCallConfig({
 						}
 					>
 						<Plus className="size-3.5" />
-						Add header
+						{panelT("Add header")}
 					</Button>
 				</div>
 			</Field>
@@ -2133,10 +2222,12 @@ function TriggerConfigForm({
 	canRotateWebhookToken: boolean;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	const kind = data.triggerKind ?? "keyword";
 	return (
 		<div className="flex flex-col gap-3">
-			<Field label="Trigger Type">
+			<Field label={panelT("Trigger Type")}>
 				<Select
 					value={kind}
 					onValueChange={(value) =>
@@ -2147,10 +2238,10 @@ function TriggerConfigForm({
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="keyword">Keyword Match</SelectItem>
-						<SelectItem value="any_message">Any Message</SelectItem>
-						<SelectItem value="webhook">Webhook</SelectItem>
-						<SelectItem value="schedule">Schedule</SelectItem>
+						<SelectItem value="keyword">{panelT("Keyword Match")}</SelectItem>
+						<SelectItem value="any_message">{panelT("Any Message")}</SelectItem>
+						<SelectItem value="webhook">{panelT("Webhook")}</SelectItem>
+						<SelectItem value="schedule">{panelT("Schedule")}</SelectItem>
 					</SelectContent>
 				</Select>
 			</Field>
@@ -2171,8 +2262,9 @@ function TriggerConfigForm({
 			)}
 			{kind === "any_message" && (
 				<p className="text-[10px] text-muted-foreground">
-					Fires on each incoming message that matches the selected chat scope
-					and tag filters.
+					{panelT(
+						"Fires on each incoming message that matches the selected chat scope and tag filters.",
+					)}
 				</p>
 			)}
 		</div>
@@ -2254,6 +2346,8 @@ function LogicConfigForm({
 	edges?: Edge[];
 	currentNodeId?: string;
 }) {
+	const panelT = usePanelTranslation();
+
 	switch (data.nodeType) {
 		case "condition":
 			return (
@@ -2274,7 +2368,7 @@ function LogicConfigForm({
 		default:
 			return (
 				<p className="text-[10px] text-muted-foreground">
-					No configuration needed
+					{panelT("No configuration needed")}
 				</p>
 			);
 	}
@@ -2287,6 +2381,8 @@ function ActionConfigForm({
 	data: ActionNodeData;
 	onUpdate: (d: Partial<FlowNodeData>) => void;
 }) {
+	const panelT = usePanelTranslation();
+
 	switch (data.nodeType) {
 		case "forward":
 			return <ForwardConfig data={data} onUpdate={onUpdate} />;
@@ -2295,7 +2391,7 @@ function ActionConfigForm({
 		default:
 			return (
 				<p className="text-[10px] text-muted-foreground">
-					No configuration needed
+					{panelT("No configuration needed")}
 				</p>
 			);
 	}
@@ -2310,10 +2406,12 @@ export function NodeConfigPanel({
 	onUpdate,
 	onDelete,
 }: NodeConfigPanelProps) {
+	const panelT = usePanelTranslation();
+
 	if (!node) {
 		return (
 			<div className="flex h-full items-center justify-center text-muted-foreground text-xs">
-				Select a node to edit
+				{panelT("Select a node to edit")}
 			</div>
 		);
 	}
@@ -2382,9 +2480,9 @@ export function NodeConfigPanel({
 
 	return (
 		<div className="flex flex-col gap-3 p-3">
-			<SectionTitle>Node Properties</SectionTitle>
+			<SectionTitle>{panelT("Node Properties")}</SectionTitle>
 			{!isTriggerNode && (
-				<Field label="Label">
+				<Field label={panelT("Label")}>
 					<Input
 						className="h-7 text-xs"
 						value={data.label}
@@ -2404,7 +2502,7 @@ export function NodeConfigPanel({
 						onClick={() => onDelete(node.id)}
 					>
 						<Trash2 className="size-3" />
-						Delete Node
+						{panelT("Delete Node")}
 					</Button>
 				</>
 			)}

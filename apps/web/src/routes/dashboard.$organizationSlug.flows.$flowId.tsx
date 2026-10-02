@@ -69,6 +69,7 @@ import {
 	resetNodeIdCounter,
 } from "@/components/flow-nodes";
 import { NodeConfigPanel } from "@/components/node-config-panel";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useEditorStore } from "@/stores/editor-store";
 import { useTRPC } from "@/utils/trpc";
 
@@ -225,6 +226,8 @@ function ShareFlowDialog({
 	tenantId: string;
 	ownerId: string;
 }) {
+	const panelT = usePanelTranslation();
+
 	const trpc = useTRPC();
 	const [open, setOpen] = useState(false);
 	const [memberId, setMemberId] = useState("");
@@ -245,19 +248,19 @@ function ShareFlowDialog({
 		trpc.tenant.grantFlowAccess.mutationOptions({
 			onSuccess: () => {
 				setMemberId("");
-				toast.success("Flow access updated");
+				toast.success(panelT("Flow access updated"));
 				refetchSharing();
 			},
-			onError: () => toast.error("Unable to update flow access"),
+			onError: () => toast.error(panelT("Unable to update flow access")),
 		}),
 	);
 	const revokeAccess = useMutation(
 		trpc.tenant.revokeFlowAccess.mutationOptions({
 			onSuccess: () => {
-				toast.success("Flow access revoked");
+				toast.success(panelT("Flow access revoked"));
 				refetchSharing();
 			},
-			onError: () => toast.error("Unable to revoke flow access"),
+			onError: () => toast.error(panelT("Unable to revoke flow access")),
 		}),
 	);
 	const grants = grantsQuery.data ?? [];
@@ -286,23 +289,25 @@ function ShareFlowDialog({
 				}
 			>
 				<Share2 className="size-3.5" />
-				Share
+				{panelT("Share")}
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-xl">
 				<DialogHeader>
-					<DialogTitle>Share flow</DialogTitle>
+					<DialogTitle>{panelT("Share flow")}</DialogTitle>
 					<DialogDescription>
-						Give active members of this workspace view-only or editing access.
+						{panelT(
+							"Give active members of this workspace view-only or editing access.",
+						)}
 					</DialogDescription>
 				</DialogHeader>
 				{isLoading ? (
 					<p className="py-6 text-center text-muted-foreground text-sm">
-						Loading sharing settings...
+						{panelT("Loading sharing settings...")}
 					</p>
 				) : membersQuery.error || grantsQuery.error ? (
 					<div className="space-y-3 rounded-md border border-destructive/30 bg-destructive/5 p-3">
 						<p className="text-destructive text-sm">
-							Unable to load sharing settings. Try again.
+							{panelT("Unable to load sharing settings. Try again.")}
 						</p>
 						<Button
 							type="button"
@@ -310,7 +315,7 @@ function ShareFlowDialog({
 							variant="outline"
 							onClick={refetchSharing}
 						>
-							Retry
+							{panelT("Retry")}
 						</Button>
 					</div>
 				) : (
@@ -321,7 +326,7 @@ function ShareFlowDialog({
 								onChange={(event) => setMemberId(event.target.value)}
 							>
 								<NativeSelectOption value="">
-									Select a member
+									{panelT("Select a member")}
 								</NativeSelectOption>
 								{eligibleMembers.map((member) => (
 									<NativeSelectOption key={member.id} value={member.id}>
@@ -335,8 +340,12 @@ function ShareFlowDialog({
 									setCapability(event.target.value as "viewer" | "editor")
 								}
 							>
-								<NativeSelectOption value="viewer">Viewer</NativeSelectOption>
-								<NativeSelectOption value="editor">Editor</NativeSelectOption>
+								<NativeSelectOption value="viewer">
+									{panelT("Viewer")}
+								</NativeSelectOption>
+								<NativeSelectOption value="editor">
+									{panelT("Editor")}
+								</NativeSelectOption>
 							</NativeSelect>
 							<Button
 								type="button"
@@ -350,12 +359,12 @@ function ShareFlowDialog({
 									})
 								}
 							>
-								{grantAccess.isPending ? "Sharing..." : "Share"}
+								{grantAccess.isPending ? panelT("Sharing...") : panelT("Share")}
 							</Button>
 						</div>
 						{grants.length === 0 ? (
 							<p className="text-muted-foreground text-sm">
-								Only you can access this flow.
+								{panelT("Only you can access this flow.")}
 							</p>
 						) : (
 							<div className="divide-y rounded-md border">
@@ -385,10 +394,10 @@ function ShareFlowDialog({
 											}
 										>
 											<NativeSelectOption value="viewer">
-												Viewer
+												{panelT("Viewer")}
 											</NativeSelectOption>
 											<NativeSelectOption value="editor">
-												Editor
+												{panelT("Editor")}
 											</NativeSelectOption>
 										</NativeSelect>
 										<Button
@@ -403,10 +412,12 @@ function ShareFlowDialog({
 													userId: grant.userId,
 												})
 											}
-											title={`Revoke access for ${grant.name || grant.email}`}
+											title={panelT("Revoke access for {v0}", {
+												v0: grant.name || grant.email,
+											})}
 										>
 											<Trash2 className="size-3.5" />
-											<span className="sr-only">Revoke access</span>
+											<span className="sr-only">{panelT("Revoke access")}</span>
 										</Button>
 									</div>
 								))}
@@ -420,7 +431,7 @@ function ShareFlowDialog({
 						variant="outline"
 						onClick={() => setOpen(false)}
 					>
-						Done
+						{panelT("Done")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
@@ -429,6 +440,8 @@ function ShareFlowDialog({
 }
 
 function FlowEditor() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const { flowId } = Route.useParams();
 	const trpc = useTRPC();
@@ -700,20 +713,20 @@ function FlowEditor() {
 			onSuccess: (updated) => {
 				setGraphDiagnostics(updated.graphDiagnostics);
 				markSaved();
-				toast.success("Flow saved");
+				toast.success(panelT("Flow saved"));
 				refetch();
 			},
-			onError: () => toast.error("Failed to save"),
+			onError: () => toast.error(panelT("Failed to save")),
 		}),
 	);
 	const renameMut = useMutation(
 		trpc.flow.update.mutationOptions({
 			onSuccess: () => {
 				setRenameOpen(false);
-				toast.success("Flow renamed");
+				toast.success(panelT("Flow renamed"));
 				refetch();
 			},
-			onError: () => toast.error("Failed to rename flow"),
+			onError: () => toast.error(panelT("Failed to rename flow")),
 		}),
 	);
 
@@ -771,7 +784,7 @@ function FlowEditor() {
 			if (!type || !reactFlowInstance) return;
 
 			if (isTriggerType(type) && hasTriggerNode(nodes)) {
-				toast.error("Only one trigger node allowed per flow");
+				toast.error(panelT("Only one trigger node allowed per flow"));
 				return;
 			}
 
@@ -785,7 +798,7 @@ function FlowEditor() {
 				return next;
 			});
 		},
-		[canEdit, reactFlowInstance, setNodes, pushHistory, edges, nodes],
+		[canEdit, reactFlowInstance, setNodes, pushHistory, edges, nodes, panelT],
 	);
 
 	const handleUndo = useCallback(() => {
@@ -842,7 +855,7 @@ function FlowEditor() {
 						className="flex items-center gap-1 text-muted-foreground text-xs hover:text-foreground"
 					>
 						<ArrowLeft className="size-3.5" />
-						Back
+						{panelT("Back")}
 					</Link>
 					<Dialog open={renameOpen} onOpenChange={setRenameOpen}>
 						<div className="flex items-center gap-1">
@@ -850,7 +863,7 @@ function FlowEditor() {
 								{flow.name}
 								{isDirty && (
 									<span className="ml-1 text-[10px] text-muted-foreground">
-										(unsaved)
+										{panelT("(unsaved)")}
 									</span>
 								)}
 							</h1>
@@ -862,8 +875,8 @@ function FlowEditor() {
 										size="icon-xs"
 										title={
 											isOwner
-												? "Rename flow"
-												: "Only the owner can rename this flow"
+												? panelT("Rename flow")
+												: panelT("Only the owner can rename this flow")
 										}
 										disabled={!isOwner}
 									/>
@@ -874,9 +887,9 @@ function FlowEditor() {
 						</div>
 						<DialogContent className="sm:max-w-sm">
 							<DialogHeader>
-								<DialogTitle>Rename flow</DialogTitle>
+								<DialogTitle>{panelT("Rename flow")}</DialogTitle>
 								<DialogDescription>
-									Update the display name for this flow.
+									{panelT("Update the display name for this flow.")}
 								</DialogDescription>
 							</DialogHeader>
 							<Input
@@ -885,7 +898,7 @@ function FlowEditor() {
 								onKeyDown={(event) => {
 									if (event.key === "Enter") handleRename();
 								}}
-								placeholder="Flow name"
+								placeholder={panelT("Flow name")}
 							/>
 							<DialogFooter>
 								<Button
@@ -893,7 +906,7 @@ function FlowEditor() {
 									variant="outline"
 									onClick={() => setRenameOpen(false)}
 								>
-									Cancel
+									{panelT("Cancel")}
 								</Button>
 								<Button
 									type="button"
@@ -904,7 +917,7 @@ function FlowEditor() {
 										renameValue.trim() === flow.name
 									}
 								>
-									{renameMut.isPending ? "Saving..." : "Rename"}
+									{renameMut.isPending ? panelT("Saving...") : panelT("Rename")}
 								</Button>
 							</DialogFooter>
 						</DialogContent>
@@ -919,17 +932,19 @@ function FlowEditor() {
 						}
 						className="h-4 px-1.5 text-[9px]"
 					>
-						{flow.status}
+						{panelT(flow.status)}
 					</Badge>
 					<Badge
 						variant={isOwner ? "secondary" : "outline"}
 						className="h-4 px-1.5 text-[9px]"
 					>
-						{isOwner ? "Owned" : `Shared · ${flow.accessCapability}`}
+						{isOwner
+							? panelT("Owned")
+							: panelT("Shared · {v0}", { v0: flow.accessCapability })}
 					</Badge>
 					{!isOwner && flow.owner && (
 						<span className="max-w-52 truncate text-muted-foreground text-xs">
-							Shared by {flow.owner.name} · {flow.owner.email}
+							{panelT("Shared by")} {flow.owner.name} · {flow.owner.email}
 						</span>
 					)}
 
@@ -939,7 +954,7 @@ function FlowEditor() {
 						className="flex items-center gap-1 text-muted-foreground text-xs hover:text-foreground"
 					>
 						<Users className="size-3.5" />
-						Sessions
+						{panelT("Sessions")}
 					</Link>
 					<Link
 						to="/dashboard/$organizationSlug/flows/$flowId/logs"
@@ -947,7 +962,7 @@ function FlowEditor() {
 						className="flex items-center gap-1 text-muted-foreground text-xs hover:text-foreground"
 					>
 						<ScrollText className="size-3.5" />
-						Logs
+						{panelT("Logs")}
 					</Link>
 				</div>
 				<div className="flex items-center gap-2">
@@ -964,7 +979,7 @@ function FlowEditor() {
 						size="icon-sm"
 						disabled={!canEdit || !canUndo}
 						onClick={handleUndo}
-						title="Undo (Ctrl+Z)"
+						title={panelT("Undo (Ctrl+Z)")}
 					>
 						<Undo2 className="size-3.5" />
 					</Button>
@@ -973,7 +988,7 @@ function FlowEditor() {
 						size="icon-sm"
 						disabled={!canEdit || !canRedo}
 						onClick={handleRedo}
-						title="Redo (Ctrl+Shift+Z)"
+						title={panelT("Redo (Ctrl+Shift+Z)")}
 					>
 						<Redo2 className="size-3.5" />
 					</Button>
@@ -989,7 +1004,7 @@ function FlowEditor() {
 						disabled={!canEdit || saveMut.isPending}
 					>
 						<Save className="size-3.5" />
-						{saveMut.isPending ? "Saving..." : "Save"}
+						{saveMut.isPending ? panelT("Saving...") : panelT("Save")}
 					</Button>
 				</div>
 			</div>
@@ -998,9 +1013,9 @@ function FlowEditor() {
 				<Card className="w-64 shrink-0 overflow-y-auto rounded-none border-0 border-r bg-card/80">
 					<CardContent className="flex flex-col gap-4 p-4">
 						<div>
-							<p className="font-medium text-sm">Add Nodes</p>
+							<p className="font-medium text-sm">{panelT("Add Nodes")}</p>
 							<p className="text-muted-foreground text-xs">
-								Click or drag to canvas
+								{panelT("Click or drag to canvas")}
 							</p>
 						</div>
 						{paletteCategories.map((cat) => (
@@ -1030,7 +1045,7 @@ function FlowEditor() {
 											>
 												<item.icon className={cn("size-3", accent.icon)} />
 											</span>
-											<span className="truncate">{item.label}</span>
+											<span className="truncate">{panelT(item.label)}</span>
 										</Button>
 									);
 								})}
@@ -1057,6 +1072,14 @@ function FlowEditor() {
 							onDragOver={handleCanvasDragOver}
 							nodeTypes={nodeTypes}
 							fitView
+							ariaLabelConfig={{
+								"controls.zoomIn.ariaLabel": panelT("Zoom in"),
+								"controls.zoomOut.ariaLabel": panelT("Zoom out"),
+								"controls.fitView.ariaLabel": panelT("Fit view"),
+								"controls.interactive.ariaLabel": panelT(
+									"Toggle interactivity",
+								),
+							}}
 							fitViewOptions={{ padding: 0.2 }}
 							deleteKeyCode={null}
 							proOptions={{ hideAttribution: true }}
@@ -1086,7 +1109,8 @@ function FlowEditor() {
 							<div className="flex flex-col gap-2 border-b p-3">
 								<div className="flex items-center gap-2 font-medium text-destructive text-xs">
 									<AlertTriangle className="size-3.5" />
-									Graph issues ({graphDiagnostics.length})
+									{panelT("Graph issues (")}
+									{graphDiagnostics.length})
 								</div>
 								{graphDiagnostics.map((diagnostic, index) => (
 									<div
@@ -1098,7 +1122,8 @@ function FlowEditor() {
 										</p>
 										{diagnostic.missingHandles?.length ? (
 											<p className="text-[10px] text-muted-foreground">
-												Missing: {diagnostic.missingHandles.join(", ")}
+												{panelT("Missing:")}{" "}
+												{diagnostic.missingHandles.join(", ")}
 											</p>
 										) : null}
 										<div className="flex gap-1">
@@ -1108,7 +1133,7 @@ function FlowEditor() {
 												size="xs"
 												onClick={() => focusDiagnostic(diagnostic)}
 											>
-												Focus
+												{panelT("Focus")}
 											</Button>
 											{diagnostic.edgeId && (
 												<Button
@@ -1122,15 +1147,16 @@ function FlowEditor() {
 														}
 													}}
 												>
-													Delete edge
+													{panelT("Delete edge")}
 												</Button>
 											)}
 										</div>
 									</div>
 								))}
 								<p className="text-[10px] text-muted-foreground">
-									Reconnect missing branches manually from the highlighted
-									option handle.
+									{panelT(
+										"Reconnect missing branches manually from the highlighted option handle.",
+									)}
 								</p>
 							</div>
 						)}
@@ -1159,6 +1185,8 @@ function DeployDialog({
 	flowName: string;
 	disabled: boolean;
 }) {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [open, setOpen] = useState(false);
@@ -1175,7 +1203,7 @@ function DeployDialog({
 		trpc.flow.deploy.mutationOptions({
 			onSuccess: () => {
 				setOpen(false);
-				toast.success(`"${flowName}" deployed`);
+				toast.success(panelT('"{v0}" deployed', { v0: flowName }));
 			},
 			onError: (err) => toast.error(err.message ?? "Deploy failed"),
 		}),
@@ -1194,13 +1222,13 @@ function DeployDialog({
 				className={cn(buttonVariants({ size: "sm" }), "h-7 text-xs")}
 			>
 				<Play className="size-3.5" />
-				Deploy
+				{panelT("Deploy")}
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Deploy Flow</DialogTitle>
+					<DialogTitle>{panelT("Deploy Flow")}</DialogTitle>
 					<DialogDescription>
-						Select device to run this flow on.
+						{panelT("Select device to run this flow on.")}
 					</DialogDescription>
 				</DialogHeader>
 				{devices && devices.length > 0 ? (
@@ -1222,7 +1250,7 @@ function DeployDialog({
 									<span className="flex flex-col items-start gap-0.5">
 										<span className="font-medium">{d.name}</span>
 										<span className="text-[10px] text-muted-foreground">
-											{d.provider} · {d.status}
+											{d.provider} · {panelT(d.status)}
 										</span>
 									</span>
 								</Button>
@@ -1231,12 +1259,12 @@ function DeployDialog({
 					</div>
 				) : (
 					<p className="text-muted-foreground text-xs">
-						No devices available. Add device first.
+						{panelT("No devices available. Add device first.")}
 					</p>
 				)}
 				<DialogFooter>
 					<Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-						Cancel
+						{panelT("Cancel")}
 					</Button>
 					<Button
 						size="sm"
@@ -1249,7 +1277,7 @@ function DeployDialog({
 							})
 						}
 					>
-						{deployMut.isPending ? "Deploying..." : "Deploy"}
+						{deployMut.isPending ? panelT("Deploying...") : panelT("Deploy")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

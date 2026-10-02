@@ -32,6 +32,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useActiveOrganization } from "@/components/active-organization";
 import { DataTable } from "@/components/data-table";
+import { useTranslation as usePanelTranslation } from "@/i18n/provider";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard/$organizationSlug/webhooks")({
@@ -126,11 +127,14 @@ function normalizeEventSelection(value: unknown): WebhookEventSelection[] {
 	return valid.length > 0 ? valid : ["*"];
 }
 
-function summarizeEvents(value: unknown) {
+function summarizeEvents(
+	value: unknown,
+	t: ReturnType<typeof usePanelTranslation>,
+) {
 	const events = normalizeEventSelection(value);
-	if (events.includes("*")) return "All events";
-	if (events.length === 1) return eventLabels[events[0] as WebhookEvent];
-	return `${events.length} events`;
+	if (events.includes("*")) return t("All events");
+	if (events.length === 1) return t(eventLabels[events[0] as WebhookEvent]);
+	return t("{count} events", { count: events.length });
 }
 
 function summarizeSelection(
@@ -144,6 +148,8 @@ function summarizeSelection(
 }
 
 function WebhooksPage() {
+	const panelT = usePanelTranslation();
+
 	const organization = useActiveOrganization();
 	const trpc = useTRPC();
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -199,7 +205,7 @@ function WebhooksPage() {
 			onSuccess: () => {
 				setDialogOpen(false);
 				resetForm();
-				toast.success("Webhook saved. Start listening to events!");
+				toast.success(panelT("Webhook saved. Start listening to events!"));
 				refetch();
 			},
 			onError: (e) => toast.error(e.message ?? "Failed to add webhook"),
@@ -211,7 +217,7 @@ function WebhooksPage() {
 			onSuccess: () => {
 				setDialogOpen(false);
 				resetForm();
-				toast.success("Webhook updated");
+				toast.success(panelT("Webhook updated"));
 				refetch();
 			},
 			onError: (e) => toast.error(e.message ?? "Failed to update webhook"),
@@ -221,7 +227,7 @@ function WebhooksPage() {
 	const deleteMut = useMutation(
 		trpc.webhook.deleteEndpoint.mutationOptions({
 			onSuccess: () => {
-				toast.success("Webhook deleted");
+				toast.success(panelT("Webhook deleted"));
 				refetch();
 			},
 			onError: (e) => toast.error(e.message ?? "Failed to delete webhook"),
@@ -231,7 +237,7 @@ function WebhooksPage() {
 	const rollSecretMut = useMutation(
 		trpc.webhook.regenerateSecret.mutationOptions({
 			onSuccess: (data) => {
-				toast.success("Secret regenerated!");
+				toast.success(panelT("Secret regenerated!"));
 				refetch();
 				alert(
 					`New secret generated:\n\n${data.secret}\n\nPlease update your server config.`,
@@ -289,7 +295,7 @@ function WebhooksPage() {
 	const columns = [
 		{
 			key: "name",
-			header: "Name",
+			header: panelT("Name"),
 			cell: (row: (typeof webhooks)[0]) => (
 				<span className="cursor-pointer truncate font-medium text-foreground text-xs underline decoration-border decoration-dotted underline-offset-4">
 					{row.name}
@@ -298,7 +304,7 @@ function WebhooksPage() {
 		},
 		{
 			key: "url",
-			header: "Target URL",
+			header: panelT("Target URL"),
 			cell: (row: (typeof webhooks)[0]) => (
 				<span className="block max-w-xs truncate font-mono text-xs">
 					{row.url}
@@ -307,16 +313,16 @@ function WebhooksPage() {
 		},
 		{
 			key: "events",
-			header: "Events",
+			header: panelT("Events"),
 			cell: (row: (typeof webhooks)[0]) => (
 				<Badge variant="outline" className="h-4 px-1 text-[9px]">
-					{summarizeEvents(row.subscribedEvents)}
+					{summarizeEvents(row.subscribedEvents, panelT)}
 				</Badge>
 			),
 		},
 		{
 			key: "devices",
-			header: "Devices",
+			header: panelT("Devices"),
 			cell: (row: (typeof webhooks)[0]) => (
 				<Badge variant="outline" className="h-4 gap-1 px-1 text-[9px]">
 					<Globe className="mr-0.5 h-2.5 w-2.5 text-muted-foreground" />
@@ -330,7 +336,7 @@ function WebhooksPage() {
 		},
 		{
 			key: "flows",
-			header: "Flows",
+			header: panelT("Flows"),
 			cell: (row: (typeof webhooks)[0]) => (
 				<Badge variant="outline" className="h-4 px-1 text-[9px]">
 					{summarizeSelection(
@@ -343,13 +349,13 @@ function WebhooksPage() {
 		},
 		{
 			key: "isActive",
-			header: "Status",
+			header: panelT("Status"),
 			cell: (row: (typeof webhooks)[0]) => (
 				<Badge
 					variant={row.isActive ? "default" : "secondary"}
 					className="h-4 px-1 text-[9px]"
 				>
-					{row.isActive ? "Active" : "Disabled"}
+					{row.isActive ? panelT("Active") : panelT("Disabled")}
 				</Badge>
 			),
 		},
@@ -368,20 +374,22 @@ function WebhooksPage() {
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem onClick={() => openEditDialog(row)}>
 							<Edit3 className="mr-2 size-3.5" />
-							Edit
+							{panelT("Edit")}
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() => rollSecretMut.mutate({ id: row.id })}
 						>
 							<RefreshCw className="mr-2 size-3.5" />
-							Roll Secret
+							{panelT("Roll Secret")}
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							className="text-destructive"
 							onClick={() => {
 								if (
 									confirm(
-										"Are you sure you want to delete this webhook endpoint?",
+										panelT(
+											"Are you sure you want to delete this webhook endpoint?",
+										),
 									)
 								) {
 									deleteMut.mutate({ id: row.id });
@@ -389,7 +397,7 @@ function WebhooksPage() {
 							}}
 						>
 							<Trash2 className="mr-2 size-3.5" />
-							Delete
+							{panelT("Delete")}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -401,10 +409,14 @@ function WebhooksPage() {
 		<div className="flex flex-col gap-4 p-4">
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="font-semibold text-base">Outbound Webhooks</h1>
+					<h1 className="font-semibold text-base">
+						{panelT("Outbound Webhooks")}
+					</h1>
 					<p className="text-muted-foreground text-xs">
-						{webhooks.length} endpoints · Send WhatsApp and flow events directly
-						to your backend
+						{webhooks.length}{" "}
+						{panelT(
+							"endpoints · Send WhatsApp and flow events directly to your backend",
+						)}
 					</p>
 				</div>
 				<Dialog
@@ -419,27 +431,28 @@ function WebhooksPage() {
 						onClick={openCreateDialog}
 					>
 						<Plus className="size-3.5" />
-						New Endpoint
+						{panelT("New Endpoint")}
 					</DialogTrigger>
 					<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
 						<DialogHeader>
 							<DialogTitle>
-								{form.id ? "Edit Webhook" : "Create Webhook"}
+								{form.id ? panelT("Edit Webhook") : panelT("Create Webhook")}
 							</DialogTitle>
 							<DialogDescription>
-								Configure an HTTP or HTTPS endpoint and choose which devices,
-								events, and flows should deliver POST requests.
+								{panelT(
+									"Configure an HTTP or HTTPS endpoint and choose which devices, events, and flows should deliver POST requests.",
+								)}
 							</DialogDescription>
 						</DialogHeader>
 						<div className="flex flex-col gap-4">
 							<div className="grid gap-3 sm:grid-cols-2">
 								<div className="flex flex-col gap-1">
 									<label className="font-medium text-xs" htmlFor="wh-name">
-										Endpoint Name
+										{panelT("Endpoint Name")}
 									</label>
 									<Input
 										id="wh-name"
-										placeholder="Production Backend"
+										placeholder={panelT("Production Backend")}
 										value={form.name}
 										onChange={(e) =>
 											setForm((current) => ({
@@ -451,7 +464,7 @@ function WebhooksPage() {
 								</div>
 								<div className="flex flex-col gap-1">
 									<label className="font-medium text-xs" htmlFor="wh-url">
-										Payload URL *
+										{panelT("Payload URL *")}
 									</label>
 									<Input
 										id="wh-url"
@@ -477,20 +490,20 @@ function WebhooksPage() {
 										}))
 									}
 								/>
-								<span>Endpoint is active</span>
+								<span>{panelT("Endpoint is active")}</span>
 							</div>
 
 							<div className="space-y-2">
 								<div>
-									<p className="font-medium text-xs">Events</p>
+									<p className="font-medium text-xs">{panelT("Events")}</p>
 									<p className="text-[10px] text-muted-foreground">
-										Choose which event types this endpoint receives.
+										{panelT("Choose which event types this endpoint receives.")}
 									</p>
 								</div>
 								<div className="grid gap-2 rounded-md border p-2 sm:grid-cols-2">
 									<div className="flex items-start gap-2 rounded-md p-1.5 text-xs hover:bg-muted/50">
 										<Checkbox
-											aria-label="All events"
+											aria-label={panelT("All events")}
 											checked={form.subscribedEvents.includes("*")}
 											onCheckedChange={(checked) =>
 												setForm((current) => ({
@@ -500,9 +513,11 @@ function WebhooksPage() {
 											}
 										/>
 										<span>
-											<span className="block font-medium">All events</span>
+											<span className="block font-medium">
+												{panelT("All events")}
+											</span>
 											<span className="text-[10px] text-muted-foreground">
-												Receive every supported webhook event.
+												{panelT("Receive every supported webhook event.")}
 											</span>
 										</span>
 									</div>
@@ -512,7 +527,7 @@ function WebhooksPage() {
 											className="flex items-start gap-2 rounded-md p-1.5 text-xs hover:bg-muted/50"
 										>
 											<Checkbox
-												aria-label={option.label}
+												aria-label={panelT(option.label)}
 												checked={form.subscribedEvents.includes(option.value)}
 												onCheckedChange={() => toggleEvent(option.value)}
 											/>
@@ -521,7 +536,7 @@ function WebhooksPage() {
 													{option.label}
 												</span>
 												<span className="text-[10px] text-muted-foreground">
-													{option.description}
+													{panelT(option.description)}
 												</span>
 											</span>
 										</div>
@@ -532,15 +547,15 @@ function WebhooksPage() {
 							<div className="grid gap-4 sm:grid-cols-2">
 								<div className="space-y-2">
 									<div>
-										<p className="font-medium text-xs">Devices</p>
+										<p className="font-medium text-xs">{panelT("Devices")}</p>
 										<p className="text-[10px] text-muted-foreground">
-											No selection means all devices.
+											{panelT("No selection means all devices.")}
 										</p>
 									</div>
 									<div className="max-h-52 space-y-1 overflow-y-auto rounded-md border p-2">
 										{devices.length === 0 ? (
 											<p className="p-2 text-muted-foreground text-xs">
-												No devices yet.
+												{panelT("No devices yet.")}
 											</p>
 										) : (
 											devices.map((device) => (
@@ -549,7 +564,9 @@ function WebhooksPage() {
 													className="flex items-start gap-2 rounded-md p-1.5 text-xs hover:bg-muted/50"
 												>
 													<Checkbox
-														aria-label={`Select device ${device.name}`}
+														aria-label={panelT("Select device {v0}", {
+															v0: device.name,
+														})}
 														checked={form.deviceIds.includes(device.id)}
 														onCheckedChange={() =>
 															toggleId("deviceIds", device.id)
@@ -560,7 +577,7 @@ function WebhooksPage() {
 															{device.name}
 														</span>
 														<span className="block truncate text-[10px] text-muted-foreground">
-															{device.phoneNumber ?? device.status}
+															{device.phoneNumber ?? panelT(device.status)}
 														</span>
 													</span>
 												</div>
@@ -571,16 +588,17 @@ function WebhooksPage() {
 
 								<div className="space-y-2">
 									<div>
-										<p className="font-medium text-xs">Flows</p>
+										<p className="font-medium text-xs">{panelT("Flows")}</p>
 										<p className="text-[10px] text-muted-foreground">
-											No selection means all flows. Flow selection only applies
-											to flow events.
+											{panelT(
+												"No selection means all flows. Flow selection only applies to flow events.",
+											)}
 										</p>
 									</div>
 									<div className="max-h-52 space-y-1 overflow-y-auto rounded-md border p-2">
 										{flows.length === 0 ? (
 											<p className="p-2 text-muted-foreground text-xs">
-												No flows yet.
+												{panelT("No flows yet.")}
 											</p>
 										) : (
 											flows.map((flow) => (
@@ -589,7 +607,9 @@ function WebhooksPage() {
 													className="flex items-start gap-2 rounded-md p-1.5 text-xs hover:bg-muted/50"
 												>
 													<Checkbox
-														aria-label={`Select flow ${flow.name}`}
+														aria-label={panelT("Select flow {v0}", {
+															v0: flow.name,
+														})}
 														checked={form.flowIds.includes(flow.id)}
 														onCheckedChange={() => toggleId("flowIds", flow.id)}
 													/>
@@ -598,7 +618,7 @@ function WebhooksPage() {
 															{flow.name}
 														</span>
 														<span className="block truncate text-[10px] text-muted-foreground">
-															{flow.deviceName ?? flow.status}
+															{flow.deviceName ?? panelT(flow.status)}
 														</span>
 													</span>
 												</div>
@@ -610,9 +630,9 @@ function WebhooksPage() {
 
 							<div className="mt-1 rounded-md border bg-muted/20 p-2">
 								<p className="text-[10px] text-muted-foreground leading-relaxed">
-									Requests are secured using an HMAC-SHA256 signature generated
-									with a unique secret. Delivery uses exponential backoff and
-									fails after maximum retries.
+									{panelT(
+										"Requests are secured using an HMAC-SHA256 signature generated with a unique secret. Delivery uses exponential backoff and fails after maximum retries.",
+									)}
 								</p>
 							</div>
 						</div>
@@ -622,7 +642,7 @@ function WebhooksPage() {
 								size="sm"
 								onClick={() => setDialogOpen(false)}
 							>
-								Cancel
+								{panelT("Cancel")}
 							</Button>
 							<Button
 								size="sm"
@@ -630,10 +650,10 @@ function WebhooksPage() {
 								onClick={saveWebhook}
 							>
 								{isSaving
-									? "Saving..."
+									? panelT("Saving...")
 									: form.id
-										? "Save changes"
-										: "Create Webhook"}
+										? panelT("Save changes")
+										: panelT("Create Webhook")}
 							</Button>
 						</DialogFooter>
 					</DialogContent>
@@ -645,12 +665,12 @@ function WebhooksPage() {
 					<WebhookIcon className="size-8 opacity-30" />
 					<div className="text-center">
 						<p className="mb-1 font-medium text-foreground/80 text-sm">
-							Listen to events
+							{panelT("Listen to events")}
 						</p>
 						<p className="mx-auto max-w-sm text-xs">
-							Webhooks are HTTP endpoints that receive events when things
-							happen, like incoming messages, device changes, or flow lifecycle
-							updates.
+							{panelT(
+								"Webhooks are HTTP endpoints that receive events when things happen, like incoming messages, device changes, or flow lifecycle updates.",
+							)}
 						</p>
 					</div>
 					<Button
@@ -659,7 +679,7 @@ function WebhooksPage() {
 						className="mt-2 text-xs"
 						onClick={openCreateDialog}
 					>
-						Add your first URL
+						{panelT("Add your first URL")}
 					</Button>
 				</div>
 			) : (
