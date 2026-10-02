@@ -1,0 +1,23 @@
+FROM oven/bun:1.3.13 AS build
+WORKDIR /app
+ENV HUSKY=0
+ENV TURBO_TELEMETRY_DISABLED=1
+COPY . .
+# Preserve the shared authentication cookie used by this EasyPanel deployment.
+RUN bun -e 'const path = "/app/packages/auth/src/index.ts"; let source = await Bun.file(path).text(); const oldCode = "advanced: {\n\t\t\tuseSecureCookies,\n\t\t\tdefaultCookieAttributes:"; const newCode = "advanced: {\n\t\t\tuseSecureCookies,\n\t\t\tcrossSubDomainCookies: { enabled: true, domain: \"ubufeb.easypanel.host\" },\n\t\t\tdefaultCookieAttributes:"; if (!source.includes(oldCode)) throw new Error("Better Auth cookie patch did not match"); await Bun.write(path, source.replace(oldCode, newCode));'
+RUN bun install --frozen-lockfile
+RUN cd /app/apps/server && bun run build
+RUN test -f /app/apps/server/dist/index.mjs
+
+FROM oven/bun:1.3.13
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HUSKY=0
+ENV TURBO_TELEMETRY_DISABLED=1
+COPY --from=build --chown=bun:bun /app /app
+RUN mkdir -p /app/uploads && chown -R bun:bun /app/uploads
+USER bun
+EXPOSE 3000
+# Database migrations are managed separately.
+CMD ["bun", "/app/apps/server/dist/index.mjs"]

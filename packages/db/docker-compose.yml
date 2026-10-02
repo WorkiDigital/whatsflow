@@ -1,0 +1,25 @@
+name: whatsapp-flow
+
+services:
+  postgres:
+    image: postgres
+    profiles:
+      - local-db
+    container_name: whatsapp-flow-postgres
+    environment:
+      POSTGRES_DB: whatsapp-flow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - whatsapp-flow_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  whatsapp-flow_postgres_data:
