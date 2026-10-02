@@ -148,7 +148,7 @@ function RootDocument() {
 
 	return (
 		<I18nProvider initialLocale={locale}>
-			<html lang="en" className="dark">
+			<html lang={locale} className="dark">
 				<head>
 					<HeadContent />
 				</head>

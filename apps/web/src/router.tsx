@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 import Loader from "./components/loader";
 import type { Locale } from "./i18n/dictionaries";
-import { defaultLocale } from "./i18n/dictionaries";
+import { readLocaleCookie } from "./i18n/provider";
 import { routeTree } from "./routeTree.gen";
 import { TRPCProvider } from "./utils/trpc";
 
@@ -64,7 +64,7 @@ const trpc = createTRPCOptionsProxy({
 });
 
 const getServerRequestLocale = createIsomorphicFn()
-	.client(() => defaultLocale)
+	.client(() => readLocaleCookie())
 	.server(async () => {
 		const { getRequestLocale } = await import(
 			"./functions/request-locale.server"
