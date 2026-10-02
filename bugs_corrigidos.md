@@ -252,3 +252,38 @@ chegar à instância publicada.
   [docs/BAILEYS_INTERACTIVE.md](docs/BAILEYS_INTERACTIVE.md).
 - `bun run test` agora inclui os testes do web e isola arquivos do pacote WhatsApp,
   evitando que mocks de conexão de um arquivo contaminem os demais.
+
+## HTTP 500 ao abrir Fluxos (`flow.list`) — 2026-10-02
+
+Os logs da API mostraram falha na consulta de `flow.list`; a Web apenas
+propagava `Internal server error`. A sessão respondia HTTP 200.
+
+Causa reproduzida com a consulta SQL gerada pelo código de produção em
+PostgreSQL via PGlite: `22P02`, `invalid input value for enum
+flow_access_capability: "owner"`. O enum do banco contém somente `viewer`
+e `editor`, mas a consulta usava `coalesce(capability, 'owner')`. PostgreSQL
+tentava converter `owner` para esse enum ao analisar a consulta, mesmo
+quando a organização não possuía nenhum fluxo. A anotação de tipo do
+TypeScript não converte o tipo SQL.
+
+Correção: `coalesce(capability::text, 'owner')`. `owner` permanece um rótulo
+derivado na resposta; não foi adicionado ao enum de concessões. A consulta
+foi extraída para `buildFlowListQuery`, usada tanto pelo endpoint quanto
+pelo teste. Os filtros por organização e usuário continuam na consulta;
+esse rótulo não concede permissões e o middleware de autorização permanece.
+
+Por que escapou: os testes anteriores de listagem devolviam linhas de um
+banco simulado, sem executar SQL. Typecheck e build também não verificam
+conversões de enums no PostgreSQL.
+
+Prevenção: novo teste executa o SQL real gerado pelo Drizzle em PGlite,
+com o enum restrito a `viewer`/`editor`, cobrindo organização vazia,
+concessões e isolamento dos filtros por organização/usuário. Os dois testes
+falharam com o código antigo e passaram com a conversão para texto. PGlite
+é uma dependência apenas de desenvolvimento/teste; produção continua com
+PostgreSQL via node-postgres.
+
+Publicação: reimplantar `whatsapp-flow-api` da `main` corrigida. Esta correção
+não exige migration, mudança de variáveis de ambiente nem deploy da Web.
+Após o deploy, abrir Fluxos e confirmar que `flow.list` responde sem HTTP 500.
+Os testes locais não comprovam o estado da instância publicada.

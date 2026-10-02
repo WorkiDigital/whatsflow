@@ -5,11 +5,10 @@ import { tag } from "@whatsapp-flow/db/schema/contact";
 import {
 	device,
 	flow,
-	flowAccessGrant,
 	flowTriggerSecret,
 } from "@whatsapp-flow/db/schema/device";
 import { connectionManager } from "@whatsapp-flow/whatsapp";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireOrganizationPermission } from "../authorization/organization";
 import { validateCronExpression } from "../engine/cron";
@@ -22,6 +21,7 @@ import {
 } from "../engine/flow-node-secrets";
 import { buildInteractiveMessage } from "../engine/interactive-message-builder";
 import { organizationPermissionProcedure, router } from "../index";
+import { buildFlowListQuery } from "./flow-list-query";
 
 const jsonSchema = z.unknown();
 
@@ -1010,36 +1010,11 @@ async function requireOrganizationDevice(
 export const flowRouter = router({
 	list: organizationPermissionProcedure("organization.flows.read").query(
 		async ({ ctx }) => {
-			const flows = await ctx.db
-				.select({
-					id: flow.id,
-					name: flow.name,
-					description: flow.description,
-					status: flow.status,
-					triggerType: flow.triggerType,
-					deviceId: flow.deviceId,
-					deviceName: device.name,
-					ownerName: user.name,
-					ownerEmail: user.email,
-					accessCapability: sql<
-						"owner" | "editor" | "viewer"
-					>`coalesce(${flowAccessGrant.capability}, 'owner')`,
-					createdAt: flow.createdAt,
-					updatedAt: flow.updatedAt,
-				})
-				.from(flow)
-				.innerJoin(user, eq(user.id, flow.userId))
-				.leftJoin(
-					flowAccessGrant,
-					and(
-						eq(flowAccessGrant.flowId, flow.id),
-						eq(flowAccessGrant.tenantId, flow.tenantId),
-						eq(flowAccessGrant.userId, ctx.currentUser.id),
-					),
-				)
-				.leftJoin(device, eq(flow.deviceId, device.id))
-				.where(eq(flow.tenantId, ctx.organization.id))
-				.orderBy(desc(flow.updatedAt));
+			const flows = await buildFlowListQuery(
+				ctx.db,
+				ctx.organization.id,
+				ctx.currentUser.id,
+			);
 
 			return flows.map(({ ownerName, ownerEmail, ...flow }) => ({
 				...flow,
