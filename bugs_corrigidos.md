@@ -223,3 +223,20 @@ login/conta suspensa e o reconhecimento da nova migration. A migration não
 foi executada contra o banco de produção nesta etapa; os testes do ciclo de
 token usam um banco simulado. Deploy e teste de navegação em produção seguem
 pendentes.
+
+## Seletor de idioma sem resposta — 2026-10-02
+
+A interface usa Menu.Item do Base UI. O seletor de idiomas foi implementado
+com `onSelect`, um evento que não é acionado por esse item ao clicar ou
+ativar a opção. A correção usa o `onClick` suportado pelo componente.
+
+O roteador no cliente também passou a ler `wf_locale` ao iniciar, em vez de
+sempre iniciar com inglês; o documento SSR recebe o idioma do contexto.
+Assim a escolha explícita continua sendo usada após recarregar a página.
+
+Teste de interação com React Testing Library e jsdom monta o menu real,
+clica em Português e Español, verifica o texto traduzido, o cookie e o
+atributo lang, e remonta o provider usando a escolha salva. O teste falhou
+com o handler antigo e passou após a correção. Suíte: 217 testes passaram.
+Esta etapa modifica o código; a correção precisa do deploy da Web para
+chegar à instância publicada.

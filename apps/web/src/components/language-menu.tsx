@@ -21,7 +21,7 @@ export function LanguageMenuItem() {
 			{supportedLocales.map((value: Locale) => (
 				<DropdownMenuItem
 					key={value}
-					onSelect={() => setLocale(value)}
+					onClick={() => setLocale(value)}
 					className="justify-between"
 				>
 					<span>{localeLabels[value]}</span>
